@@ -4,12 +4,7 @@
 #include <cstring>
 #include "judge_daemon.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#define RUC_NAME "..\\win32_ruc "
-#else
-#define RUC_NAME "../runner_linux "
-#endif
+#define RUC_NAME "../cwoj_runner "
 
 #define SPJ_MAX_TIME 5000
 #define SPJ_MAX_MEM 1073741824
