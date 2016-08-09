@@ -15,5 +15,4 @@ $(TARGET): $(OBJECTS)
 	@echo "$(CC) $(CFLAGS) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
 $(BUILD_DIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
-	@mkdir -p $(BUILD_DIR)
 	@echo "$(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
