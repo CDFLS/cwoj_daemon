@@ -1,3 +1,5 @@
+all: daemon runner
+
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BUILD_DIR := $(ROOT_DIR)/build
 TARGET_DIR := $(ROOT_DIR)/bin
@@ -15,8 +17,6 @@ daemon: create_dir
 
 runner: create_dir
 	$(MAKE) -C src/runner
-  
-all: daemon runner
 
 clean: 
 	@echo " Cleaning..."; 
