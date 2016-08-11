@@ -1,0 +1,12 @@
+[Unit]
+Description=cwoj_daemon
+After=mysql.service
+
+[Service]
+ExecStart=/usr/bin/cwoj_daemon
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=default.target
+
