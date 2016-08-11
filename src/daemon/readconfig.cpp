@@ -17,6 +17,7 @@ char HTTP_BIND_IP[32];
 uint16_t HTTP_BIND_PORT;
 
 char DataDir[MAXPATHLEN+16];
+char TempDir[MAXPATHLEN+16];
 
 typedef INI <string, string, string> ini_t;
 
@@ -50,6 +51,9 @@ bool read_config()
 
 	tmp = ini.Get(std::string("HTTP_BIND_IP"), std::string("0.0.0.0"));
 	strncpy(HTTP_BIND_IP, tmp.c_str(), 30);
+    
+    tmp = ini.Get(std::string("TempDir"), std::string(""));
+	strncpy(TempDir, tmp.c_str(), sizeof(TempDir));
 
 	HTTP_BIND_PORT = ini.Get<const char*, unsigned short>("HTTP_BIND_PORT", 8881u);
 

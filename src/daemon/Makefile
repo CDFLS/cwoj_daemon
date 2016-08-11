@@ -7,7 +7,7 @@ SOURCES := $(wildcard $(SRCDIR)/*.$(SRCEXT))
 INCLUDES := $(wildcard $(SRCDIR)/*.$(INCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILD_DIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 CFLAGS := -g -std=c++11
-LIB := -pthread -lmicrohttpd -lmysqlclient -lpthread
+LIB := -pthread -lmicrohttpd -lmysqlclient -lpthread -lboost_filesystem -lboost_system
 INC := -I /usr/include/mysql
 
 $(TARGET): $(OBJECTS)

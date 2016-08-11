@@ -10,6 +10,17 @@
 #include <sys/param.h>
 #include <sstream>
 #include <algorithm>
+#include <sys/sendfile.h>
+#include <fcntl.h>
+
+// from Stack Overflow:
+//     https://stackoverflow.com/questions/35007134/c-boost-undefined-reference-to-boostfilesystemdetailcopy-file
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+#include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
+
+using namespace std;
+using namespace boost::filesystem;
 
 #ifdef __MINGW32__
 #include <windows.h>
@@ -24,6 +35,7 @@ namespace std {
 #endif
 
 //#define USE_CENA_VALIDATOR
+
 
 enum { CMP_tra, CMP_float, CMP_int, CMP_spj };
 
@@ -170,28 +182,53 @@ void solution::judge() throw (const char *)
 	int status;
 	std::string tips;
 	for (std::string &d_name : in_files) {
-		sprintf(buffer, "%s/%s", dir_name, d_name.c_str());
+		path data_directory(dir_name), filename(d_name), 
+			inputFile, tempFile, outputFile, ansFile;
 
-		puts(buffer);
+		inputFile = data_directory / d_name;
+		outputFile = "user.out";
+		ansFile = inputFile;
+		ansFile.replace_extension("out");
+
+		if (strlen(TempDir) > 0)
+		{
+			path temp_directory(TempDir);
+
+			try
+			{
+				tempFile = temp_directory / d_name;
+
+				if (exists(tempFile))
+				{
+					remove(tempFile);
+				}
+
+				copy_file(inputFile, tempFile);
+
+				inputFile = tempFile;
+				outputFile = temp_directory / outputFile;
+                applog("Temp file created.");
+			}
+			catch (filesystem_error& ex)
+			{
+				applog("Failed to create temp file.", ex.what());
+			}
+			
+		}
 
 		execute_info result;
 		int get_score = case_score;
 
-		if (run_judge(target_path, buffer, "user.out", time_limit, (lang_extra_mem[lang] + mem_limit) << 10 /*to byte*/, &result)) {
+		if (run_judge(target_path, inputFile.string().c_str(), outputFile.string().c_str(), time_limit, (lang_extra_mem[lang] + mem_limit) << 10 /*to byte*/, &result)) {
 			error_code = RES_SE;
 			last_state = "Cannot run target program";
 			throw "Cannot run target program";
 		}
 		else if (result.state == 0) {
-			int len = d_name.size() + dir_len + 1; //dir+'/'+file
-			buffer[len - 2] = 'o';
-			buffer[len - 1] = 'u';
-			buffer[len] = 't';
-			buffer[len + 1] = '\0';
 
-			FILE *fanswer = fopen(buffer, "rb");
+			FILE *fanswer = fopen(ansFile.string().c_str(), "rb");
 			if (fanswer) {
-				FILE *foutput = fopen("user.out", "rb"), *finput;
+				FILE *foutput = fopen(outputFile.string().c_str(), "rb"), *finput;
 				if (foutput) {
 					validator_info info;
 
@@ -284,6 +321,16 @@ void solution::judge() throw (const char *)
 		if (error_code == -1 && status != RES_AC) {//only store the first error infomation
 			error_code = status;
 			last_state = tips;
+		}
+
+		if (!tempFile.empty() && exists(tempFile))
+		{
+			remove(tempFile);
+		}
+
+		if (exists(outputFile))
+		{
+			remove(outputFile);
 		}
 
 		std::unique_lock<std::mutex> Lock(*(std::mutex*)mutex_for_query);

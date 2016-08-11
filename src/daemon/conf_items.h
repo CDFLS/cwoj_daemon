@@ -12,5 +12,6 @@ extern int lang_extra_mem[];
 extern std::string lang_ext[], lang_compiler[];
 
 extern char DataDir[];
+extern char TempDir[];
 
 #endif
