@@ -20,9 +20,11 @@ DATABASE_NAME=数据库名
 
 ## ~~安装~~ 构建和安装
 我们的构建系统已经更新，我们已经从GNU Autotools迁移到CMake。  
-现在，请在项目根目录使用以下指令进行构建和安装（请注意，在目前情况下，**后两个指令需要超级用户权限**：  
+现在，请在项目根目录使用以下指令进行构建和安装（请注意，在目前情况下，**后两个指令需要超级用户权限**）：  
 ```sh
-cmake .
+mkdir build
+cd build
+cmake ..
 make
 make install
 systemctl daemon-reload
