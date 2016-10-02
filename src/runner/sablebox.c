@@ -146,7 +146,7 @@ struct profile sable_run(struct sablebox* pbox)
 		kill(getpid(), SIGSTOP);
 
 		if(!pbox->args){
-			char *tmp[2]={pbox->pathname, NULL};
+			char *tmp[2]={(char *) pbox->pathname, NULL};
 			execvp(pbox->pathname, tmp);
 		}else{		
 			execvp(pbox->pathname, pbox->args);
