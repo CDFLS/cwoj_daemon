@@ -1,7 +1,37 @@
 # 成外 OJ 评测守护程序
-本程序为成外 OJ 评测守护程序。成外 OJ 网页端在[这里](https://github.com/CDFLS/CWOJ)。
+本程序为成外 OJ 评测守护程序。成外 OJ 网页端在[这里](https://github.com/CDFLS/CWOJ)。  
 
 **警告** 当前守护程序会以 root 权限运行。以后将加入更多的安全设置，并会增强安全措施。
+
+---
+
+## For Developers Only
+Here's some critical information for developers only.  
+
+### Build System and Workflow
+We choose CMake as our build system.  
+So far, we do not have a efficient and effective way to manage our Git workflow so if you want to submit a PR, just set the destination as master.  
+**In order to keep consistency, we extremely recommend you using an IDE called CLion to develop.**
+
+### About DEB-Package
+I assume you understand what the DEB-Package is, if not, please check Wikipedia Entries.  
+In our project, there's one cmake script named DebPack.cmake. You can modify the packing arguments here in this file.  
+And here's the bash commands you will need to pack a DEB-Package(We assume that you've already navigated your PWD into the root of the project):  
+```sh
+mkdir build
+cd build
+cmake ..
+cd ..
+make
+make package
+```
+You may noticed that we use a certain out-of-source directory named `build` to storage the intermediate build files.  
+This is a good habit to keep your workspace clean and you should perform it in the same way.
+
+### About Docker
+We're working in progress on here right now.
+
+---
 
 ## 所需库
 `apt install libmysqlclient-dev libmicrohttpd-dev libboost-all-dev`

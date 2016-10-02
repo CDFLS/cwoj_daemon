@@ -18,3 +18,5 @@ message(STATUS "make")
 message(STATUS "make install")
 message(STATUS "(The commands above must be executed under super-user privilege!)")
 message(STATUS "Please make sure that you have read the manual carefully before you start to use the daemon.")
+
+include(DebPack.cmake)
