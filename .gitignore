@@ -1,9 +1,8 @@
-/bin/*
-/build/*
 /cmake_install.cmake
 /CMakeCache.txt
-/cwoj_daemon_daemon
-/cwoj_daemon_runner
 /Makefile
 /.idea
 /CMakeFiles/
+/bin/
+/build/
+/install_manifest.txt
