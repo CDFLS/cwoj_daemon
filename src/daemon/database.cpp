@@ -12,7 +12,8 @@ namespace std {
 #else
 #include <mutex>
 #endif
-#include <mysql.h>
+//#include <mysql.h>
+#include <mysql/mysql.h> // FIXME Here's something fascinating.
 #include "judge_daemon.h"
 #include "conf_items.h"
 
