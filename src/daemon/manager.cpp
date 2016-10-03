@@ -10,6 +10,7 @@
 #include <fstream>
 #include <map>
 #include <queue>
+
 #ifdef __MINGW32__
 #include <windows.h>
 
@@ -28,37 +29,37 @@ namespace std {
 	using boost::to_string;
 }
 #else
+
 #include <mutex>
 #include <thread>
 #include <condition_variable>
+
 #endif
 
 #include "judge_daemon.h"
 
-static std::map<std::string, solution* > finder;
-static std::queue<solution*> waiting, removing;
+static std::map<std::string, Solution *> finder;
+static std::queue<Solution *> waiting, removing;
 static std::mutex waiting_mutex, removing_mutex, finder_mutex, applog_mutex, rejudge_mutex;
 static std::condition_variable notifier, rejudge_notifier;
 static volatile bool rejudging, filled;
 static std::vector<int> rejudge_list;
-static solution rejudge_init;
+static Solution rejudge_init;
 
-const float build_version=1.03;
+const float build_version = 1.03;
 
 #ifdef USE_DLL_ON_WINDOWS
 run_compiler_def run_compiler;
 run_judge_def run_judge;
 #endif
 
-static char target_path[MAXPATHLEN+16];
+static std::string target_path;
 
-const char* getTargetPath()
-{
+std::string getTargetPath() {
 	return target_path;
 }
 
-void applog(const char *str, const char *info) throw ()
-{
+void applog(const char *str, const char *info) throw() {
 	time_t now_time = time(NULL);
 	std::unique_lock<std::mutex> Lock(applog_mutex);
 	char time_str[24];
@@ -70,47 +71,48 @@ void applog(const char *str, const char *info) throw ()
 	printf("[%s] %s (%s)\n", time_str, str, info);
 	fflush(stdout);
 }
-void json_builder(std::ostringstream &, solution *);
-char* JUDGE_get_progress(const char *query)
-{
+
+void json_builder(std::ostringstream &, Solution *);
+
+char *JUDGE_get_progress(const char *query) {
 	try {
-		solution *target;
+		Solution *target;
 		do {
 			std::unique_lock<std::mutex> Lock_map(finder_mutex);
 			auto it = finder.find(std::string(query + 7));//query must start with "query_",checked in http.cpp
-			if(finder.end() == it) {
-				char *response = (char*)malloc(21);
-				if(response)
-					strcpy(response, "{\"state\":\"invalid\"}");
+			if (finder.end() == it) {
+				char *response = (char *) malloc(21);
+				if (response)
+					strcpy(response, "{\"State\":\"invalid\"}");
 				return response;
 			}
 			target = it->second;
-		}while(0);
+		} while (0);
 
 		std::ostringstream json;
 		do {
-			std::unique_lock<std::mutex> Lock_map(* (std::mutex*)(target->mutex_for_query));
+			std::unique_lock<std::mutex> Lock_map(*(std::mutex *) (target->QueryMutex));
 			json_builder(json, target);
-		}while(0);
+		} while (0);
 
 		const std::string &buf = json.str();
-		char *response = (char*)malloc(buf.size() + 1);
-		if(response)
+		char *response = (char *) malloc(buf.size() + 1);
+		if (response)
 			strcpy(response, buf.c_str());
 		return response;
-	}catch(...) {
+	} catch (...) {
 		applog("Info: Exception when query");
 	}
-	char *response = (char*)malloc(21);
-	if(response)
-		strcpy(response, "{\"state\":\"invalid\"}");
+	char *response = (char *) malloc(21);
+	if (response)
+		strcpy(response, "{\"State\":\"invalid\"}");
 	return response;
 }
-void thread_remove()
-{
-	for(;;) {
+
+void thread_remove() {
+	for (;;) {
 		std::unique_lock<std::mutex> Lock(removing_mutex);
-		if(removing.empty()) {
+		if (removing.empty()) {
 			//puts("empty");
 			Lock.unlock();
 #ifdef _WIN32
@@ -122,10 +124,10 @@ void thread_remove()
 			continue;
 		}
 		time_t now = time(0);
-		if((now - removing.front()->timestamp) < 25) {
-			//printf("%d - %d < 2\n", now, removing.front()->timestamp);
+		if ((now - removing.front()->TimeStamp) < 25) {
+			//printf("%d - %d < 2\n", now, removing.front()->TimeStamp);
 			Lock.unlock();
-			int remain = (now - removing.front()->timestamp) + 1;
+			int remain = (now - removing.front()->TimeStamp) + 1;
 #ifdef _WIN32
 			Sleep(remain*1000);
 #else
@@ -135,8 +137,8 @@ void thread_remove()
 			continue;
 		}
 		puts("Information deleted");
-		solution *cur = removing.front();
-		finder.erase(cur->key);
+		Solution *cur = removing.front();
+		finder.erase(cur->Key);
 		removing.pop();
 #ifdef _WIN32
 		Sleep(1500);
@@ -147,37 +149,37 @@ void thread_remove()
 		delete cur;
 	}
 }
-void thread_judge()
-{
-	for(;;) {
-		solution *cur;
+
+void thread_judge() {
+	for (;;) {
+		Solution *cur;
 		do {
 			std::unique_lock<std::mutex> Lock(waiting_mutex);
-			notifier.wait(Lock, []()->bool {return !waiting.empty();});
+			notifier.wait(Lock, []() -> bool { return !waiting.empty(); });
 			cur = waiting.front();
 			waiting.pop();
-		}while(0);
+		} while (0);
 
 		try {
-			if(!clean_files()) {
+			if (!clean_files()) {
 				applog("Info: Cannot clean working directory.");
 			}
-			if(cur->compile())
-				cur->judge();
-			if(cur->type == TYPE_normal) {
-				cur->write_database();
+			if (cur->CompileUserCode())
+				cur->JudgeSolution();
+			if (cur->SolutionType == TYPE_normal) {
+				cur->WriteResultToDB();
 			}
-			cur->timestamp = time(0);
-		}catch(const char *e) {
+			cur->TimeStamp = time(0);
+		} catch (const char *e) {
 			std::string message("Error: Exception occur when judging ");
-			message += cur->key; 
+			message += cur->Key;
 			applog(message.c_str(), e);
 
 			try {
-				std::unique_lock<std::mutex> Lock_map(* (std::mutex*)(cur->mutex_for_query));
-				cur->detail_results.clear();
-				cur->detail_results.push_back({RES_SE, 0, 0, cur->last_state, 0});
-				cur->timestamp = time(0);
+				std::unique_lock<std::mutex> Lock_map(*(std::mutex *) (cur->QueryMutex));
+				cur->TestCaseResults.clear();
+				cur->TestCaseResults.push_back({RES_SE, 0, 0, cur->LastState, 0});
+				cur->TimeStamp = time(0);
 
 #ifdef DUMP_FOR_DEBUG
 				message = "../dump/dump_";
@@ -189,52 +191,52 @@ void thread_judge()
 					puts("Dump file created");
 				}
 #endif
-			}catch(...) {
+			} catch (...) {
 				applog("Info: Can't create dump file.");
 			}
 		}
 
-		if(cur->type == TYPE_normal) {
+		if (cur->SolutionType == TYPE_normal) {
 			std::unique_lock<std::mutex> Lock(removing_mutex);
 			removing.push(cur);
-		}else if(cur->type == TYPE_rejudge){
+		} else if (cur->SolutionType == TYPE_rejudge) {
 			rejudging = false;
 		}
 	}
 }
-void thread_rejudge()
-{
+
+void thread_rejudge() {
 	std::unique_lock<std::mutex> Lock(rejudge_mutex);
-	for(;;) {
-		rejudge_notifier.wait(Lock, []()->bool{return filled;});
+	for (;;) {
+		rejudge_notifier.wait(Lock, []() -> bool { return filled; });
 		filled = false;
 
 		puts("rejudge thread running");
-		for(int solution_id : rejudge_list) {
+		for (int solution_id : rejudge_list) {
 			printf("rejudging %d\n", solution_id);
-			solution *sol = new solution;
-			if(!sol) {
-				applog("Error: Can't allocate memory, stop rejudging");
+			Solution *sol = new Solution;
+			if (!sol) {
+				applog("Error: Can't allocate MemoryLimit, stop rejudging");
 				break;
 			}
 			try {
-				sol->copy_setting(rejudge_init); //Get problem settings, like compare_way
+				sol->ClonePropertiesFrom(rejudge_init); //Get ProblemFK settings, like ComparisonMode
 				get_exist_solution_info(solution_id, sol);
-				sol->error_code = -1;
-				sol->key = std::to_string(solution_id);
+				sol->ErrorCode = -1;
+				sol->Key = std::to_string(solution_id);
 
 				rejudging = true;
 				do { //insert to queue
 					std::unique_lock<std::mutex> Lock(waiting_mutex);
 					waiting.push(sol);
 					notifier.notify_one();
-				}while(0);
+				} while (0);
 
 				//wait until finished
-				while(rejudging);
+				while (rejudging);
 
 				update_exist_solution_info(solution_id, sol);
-			}catch(const char *e) {
+			} catch (const char *e) {
 				char tmp[64];
 				sprintf(tmp, "Error: Exception occur when rejudging %d", solution_id);
 				applog(tmp, e);
@@ -242,29 +244,29 @@ void thread_rejudge()
 			delete sol;
 		}
 		try {
-			update_problem_rejudged_status(rejudge_init.problem);
-			refresh_users_problem(rejudge_init.problem);
-		}catch(const char *e) {
-			if(e!="maintain valid field")
-			applog("Error: Exception occur when refreshing user info", e);
+			update_problem_rejudged_status(rejudge_init.ProblemFK);
+			refresh_users_problem(rejudge_init.ProblemFK);
+		} catch (const char *e) {
+			if (e != "maintain valid field")
+				applog("Error: Exception occur when refreshing UserName SingleTestCaseResult", e);
 		}
 		applog("Info: Rejudge thread finished");
 	}
 }
-char *JUDGE_start_rejudge(solution *&new_sol)
-{
-	char *p = (char*)malloc(8);
-	if(rejudge_mutex.try_lock()) {
+
+char *JUDGE_start_rejudge(Solution *&new_sol) {
+	char *p = (char *) malloc(8);
+	if (rejudge_mutex.try_lock()) {
 		try {
 			rejudge_init = *new_sol;
-			get_solution_list(rejudge_list, rejudge_init.problem);
+			get_solution_list(rejudge_list, rejudge_init.ProblemFK);
 
 			filled = true;
 			rejudge_notifier.notify_one();
 			rejudge_mutex.unlock();
 			strcpy(p, "OK");
 			return p;
-		}catch(const char *e) {
+		} catch (const char *e) {
 			applog("Error: Cannot start rejudging", e);
 			rejudge_mutex.unlock();
 
@@ -275,69 +277,69 @@ char *JUDGE_start_rejudge(solution *&new_sol)
 	strcpy(p, "another");
 	return p;
 }
-char *JUDGE_accept_submit(solution *&new_sol)
-{
+
+char *JUDGE_accept_submit(Solution *&new_sol) {
 	try {
-		if(!new_sol)
+		if (!new_sol)
 			throw "invalid pointer";
-		new_sol->error_code = -1;
-		new_sol->timestamp = 0;
+		new_sol->ErrorCode = -1;
+		new_sol->TimeStamp = 0;
 		do {
 			std::unique_lock<std::mutex> Lock(waiting_mutex);
 			waiting.push(new_sol);
 			notifier.notify_one();
-		}while(0);
+		} while (0);
 		do {
 			std::unique_lock<std::mutex> Lock(finder_mutex);
-			finder[new_sol->key] = new_sol;
-		}while(0);
-	}catch(...) {
+			finder[new_sol->Key] = new_sol;
+		} while (0);
+	} catch (...) {
 		applog("Error: Exception in JUDGE_accept_submit()");
-		char *p = (char*)malloc(6);
+		char *p = (char *) malloc(6);
 		strcpy(p, "error");
 		return p;
 	}
 	new_sol = NULL;//avoid being freed
-	char *p = (char*)malloc(3);
+	char *p = (char *) malloc(3);
 	strcpy(p, "OK");
 	return p;
 }
+
 //TODO: watchdog
-int main(int argc, char **argv)
-{
-        printf("CWOJ Judging Service ver %.2f started.\n",build_version);
+int main(int argc, char **argv) {
+	printf("CWOJ Judging Service ver %.2f started.\n", build_version);
 	//enter program directory to read ini files
 #if defined(_WIN32) || defined(__linux__)
 #ifdef _WIN32
-	int size = GetModuleFileNameA(NULL, target_path, MAXPATHLEN);
+	int size = GetModuleFileNameA(NULL, TargetPath, MAXPATHLEN);
 	if(size <= 0) {
 		applog("Error: Cannot get program directory, Exit...");
 		exit(1);
 	}
 	for(int i=size-1; i>=0; i--)
-		if(target_path[i] == '\\') {
-			target_path[i+1] = '\0';
+		if(TargetPath[i] == '\\') {
+			TargetPath[i+1] = '\0';
 			break;
 		}
-	printf("entering %s\n", target_path);
-	if(!SetCurrentDirectory(target_path)) {
+	printf("entering %s\n", TargetPath);
+	if(!SetCurrentDirectory(TargetPath)) {
 		applog("Error: Cannot enter program directory, Exit...");
 		exit(1);
 	}
 #else
-	int size = readlink("/proc/self/exe", target_path, MAXPATHLEN);
-	if(size <= 0) {
+	int size = readlink("/proc/self/exe", (char *) target_path.c_str(), MAXPATHLEN);
+	if (size <= 0) {
 		applog("Error: Cannot get program directory, Exit...");
 		exit(1);
 	}
 	target_path[size] = '\0';
-	for(int i=size-1; i>=0; i--)
-		if(target_path[i] == '/') {
-			target_path[i+1] = '\0';
+	for (int i = size - 1; i >= 0; i--)
+		if (target_path[i] == '/') {
+			target_path[i + 1] = '\0';
 			break;
 		}
-	printf("entering %s\n", target_path);
-	if(0 != chdir(target_path)) {
+	printf("entering %s\n", target_path.c_str());
+	if (0 != chdir(target_path.c_str())) {
 		applog("Error: Cannot enter program directory, Exit...");
 		exit(1);
 	}
@@ -346,11 +348,11 @@ int main(int argc, char **argv)
 	// I don't know
 #endif
 
-	if(!read_config()) {
+	if (!read_config()) {
 		applog("Error: Cannot read and parse the config.ini, Exit...");
 		exit(1);
 	}
-	if(!init_mysql_con()) {
+	if (!init_mysql_con()) {
 		applog("Error: Cannot connect to mysql, Exit...");
 		exit(1);
 	}
@@ -359,26 +361,26 @@ int main(int argc, char **argv)
 #else
 	mkdir("temp", 0777);
 #endif
-	if(0 != chdir("temp")) {
+	if (0 != chdir("temp")) {
 		applog("Error: Cannot enter working directory, Exit...");
 		exit(1);
 	}
 #ifndef __MINGW32__ //used when run program on *nix only
-	if(NULL == getcwd(target_path, MAXPATHLEN)) {
+	if (NULL == getcwd((char *) target_path.c_str(), MAXPATHLEN)) {
 		applog("Error: Cannot get working directory, Exit...");
 		exit(1);
 	}
-	strcat(target_path, "/target.exe");
-	printf("target: %s\n", target_path);
+	strcat((char *) target_path.c_str(), "/target.exe");
+	printf("target: %s\n", target_path.c_str());
 #else
-	strcpy(target_path,"target.exe");
+	strcpy(TargetPath,"target.exe");
 #endif
 
 	std::thread thread_j(thread_judge);
 	std::thread thread_r(thread_remove);
 	std::thread thread_re(thread_rejudge);
 
-	if(!start_http_interface()) {
+	if (!start_http_interface()) {
 		applog("Error: Cannot open http interface, Exit...");
 		exit(1);
 	}

@@ -10,28 +10,27 @@ using std::string;
 int lang_extra_mem[MAXLANG];
 bool lang_exist[MAXLANG];
 string lang_ext[MAXLANG];
-string lang_compiler[MAXLANG];  
+string lang_compiler[MAXLANG];
 
 char DATABASE_HOST[64], DATABASE_USER[128], DATABASE_PASS[128], DATABASE_NAME[128];
 char HTTP_BIND_IP[32];
 uint16_t HTTP_BIND_PORT;
 
-char DataDir[MAXPATHLEN+16];
-char TempDir[MAXPATHLEN+16];
+char DataDir[MAXPATHLEN + 16];
+char TempDir[MAXPATHLEN + 16];
 
-typedef INI <string, string, string> ini_t;
+typedef INI<string, string, string> ini_t;
 
-bool read_config()
-{
+bool read_config() {
 	ini_t ini("/etc/cwojconfig.ini", false);
-	if(!ini.Parse()) {
+	if (!ini.Parse()) {
 		applog("Error: Cannot open /etc/cwojconfig.ini, Exit...");
 		exit(1);
 	}
 
 	ini.Select("system");
 	std::string tmp = ini.Get(std::string("datadir"), std::string(""));
-	if(tmp==""){
+	if (tmp == "") {
 		applog("Error: We don't know your data directory.");
 		return false;
 	}
@@ -46,39 +45,39 @@ bool read_config()
 	tmp = ini.Get(std::string("DATABASE_PASS"), std::string(""));
 	strncpy(DATABASE_PASS, tmp.c_str(), 120);
 
-        tmp = ini.Get(std::string("DATABASE_NAME"), std::string("cwoj"));
+	tmp = ini.Get(std::string("DATABASE_NAME"), std::string("cwoj"));
 	strncpy(DATABASE_NAME, tmp.c_str(), 120);
 
 	tmp = ini.Get(std::string("HTTP_BIND_IP"), std::string("0.0.0.0"));
 	strncpy(HTTP_BIND_IP, tmp.c_str(), 30);
-    
-    tmp = ini.Get(std::string("TempDir"), std::string(""));
+
+	tmp = ini.Get(std::string("TempDir"), std::string(""));
 	strncpy(TempDir, tmp.c_str(), sizeof(TempDir));
 
-	HTTP_BIND_PORT = ini.Get<const char*, unsigned short>("HTTP_BIND_PORT", 8881u);
+	HTTP_BIND_PORT = ini.Get<const char *, unsigned short>("HTTP_BIND_PORT", 8881u);
 
-	for(auto i = ini.sections.begin(); i != ini.sections.end(); ++i) {
+	for (auto i = ini.sections.begin(); i != ini.sections.end(); ++i) {
 		const string &lang = i->first;
-		if(lang.find("lang") != 0)
+		if (lang.find("LanguageType") != 0)
 			continue;
 		int num = atoi(lang.c_str() + 4);
-		if(!num || num > MAXLANG) {
+		if (!num || num > MAXLANG) {
 			applog("Info: Language number is not correct.");
 			return false;
 		}
 		num--;
 		std::map<string, string> &keys = *(i->second);
-		if(keys.count(string("extra_mem")))
+		if (keys.count(string("extra_mem")))
 			lang_extra_mem[num] = Convert<int>(keys[string("extra_mem")]);
 		else
 			lang_extra_mem[num] = 0;
 
-		if(keys.count(string("compiler")))
+		if (keys.count(string("compiler")))
 			lang_compiler[num] = keys[string("compiler")];
 		else
 			return false;
 
-		if(keys.count(string("ext")))
+		if (keys.count(string("ext")))
 			lang_ext[num] = keys[string("ext")];
 		else
 			return false;
