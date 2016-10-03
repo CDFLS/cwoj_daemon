@@ -10,5 +10,15 @@ target_link_libraries(cwoj_daemon_daemon ${Boost_LIBRARIES})
 target_link_libraries(cwoj_daemon_daemon ${CMAKE_THREAD_LIBS_INIT})
 
 install(PROGRAMS ${CMAKE_SOURCE_DIR}/bin/cwoj_daemon_daemon DESTINATION bin)
-install(FILES ${CMAKE_SOURCE_DIR}/cwojconfig.ini DESTINATION /etc/)
-install(FILES ${CMAKE_SOURCE_DIR}/cwojdaemon.service DESTINATION /etc/systemd/system/)
+
+if (NOT EXISTS "/etc/cwojconfig.ini")
+    install(FILES ${CMAKE_SOURCE_DIR}/cwojconfig.ini DESTINATION /etc/)
+else ()
+    message(STATUS "File /etc/cwojconfig.ini is exists, template copying will be passed in the installation process.")
+endif ()
+
+if (NOT EXISTS "/etc/systemd/system/cwojdaemon.service")
+    install(FILES ${CMAKE_SOURCE_DIR}/cwojdaemon.service DESTINATION /etc/systemd/system/)
+else ()
+    message(STATUS "File /etc/systemd/system/cwojdaemon.service is exists, template copying will be passed in the installation process.")
+endif ()
