@@ -1,0 +1,7 @@
+function(CopyConfigFileIfNotExist src cond dest)
+    if (NOT EXISTS ${cond})
+        install(FILES ${src} DESTINATION ${dest})
+    else ()
+        install(CODE "message(STATUS \"${cond} exists, template copying will be ignored in the installation process.\")")
+    endif ()
+endfunction()

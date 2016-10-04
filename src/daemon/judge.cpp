@@ -1,22 +1,17 @@
 #include "judge_daemon.h"
 #include "conf_items.h"
-#include <unistd.h>
-#include <stdio.h>
 #include <string.h>
 #include <dirent.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/param.h>
 #include <sstream>
 #include <algorithm>
-#include <sys/sendfile.h>
-#include <fcntl.h>
 
 // from Stack Overflow:
 //     https://stackoverflow.com/questions/35007134/c-boost-undefined-reference-to-boostfilesystemdetailcopy-file
 #define BOOST_NO_CXX11_SCOPED_ENUMS
+
 #include <boost/filesystem.hpp>
+
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 using namespace std;
@@ -31,16 +26,17 @@ namespace std {
 	using boost::unique_lock;
 }
 #else
-#include <mutex>
+
 #endif
 
 //#define USE_CENA_VALIDATOR
 
 
-enum { CMP_tra, CMP_float, CMP_int, CMP_spj };
+enum {
+	CMP_tra, CMP_float, CMP_int, CMP_spj
+};
 
-bool clean_files() throw ()
-{
+bool clean_files() throw() {
 	int ret;
 #ifdef _WIN32
 	ret = system("del /f /q /s *");
@@ -49,56 +45,56 @@ bool clean_files() throw ()
 #endif
 	return ret == 0;
 }
-solution::solution()
-{
-	target_path = getTargetPath();
-	mutex_for_query = new std::mutex;
-	problem = compare_way = lang = time_limit = mem_limit = score = error_code = 0;
-	public_code = 0;
-	timestamp = 0;
-	type = TYPE_normal;
+
+Solution::Solution() {
+	TargetPath = getTargetPath();
+	QueryMutex = new std::mutex;
+	ProblemFK = ComparisonMode = LanguageType = TimeLimit = MemoryLimit = Score = ErrorCode = 0;
+	IsCodeOpenSource = 0;
+	TimeStamp = 0;
+	SolutionType = TYPE_normal;
 }
-solution::~solution()
-{
-	delete (std::mutex*)mutex_for_query;
+
+Solution::~Solution() {
+	delete (std::mutex *) QueryMutex;
 }
-void solution::copy_setting(const solution &from) throw ()
-{
-	problem = from.problem;
-	compare_way = from.compare_way;
-	lang = from.lang;
-	time_limit = from.time_limit;
-	mem_limit = from.mem_limit;
-	score = from.score;
-	type = from.type;
-	target_path = from.target_path;
+
+void Solution::ClonePropertiesFrom(const Solution &from) throw() {
+	ProblemFK = from.ProblemFK;
+	ComparisonMode = from.ComparisonMode;
+	LanguageType = from.LanguageType;
+	TimeLimit = from.TimeLimit;
+	MemoryLimit = from.MemoryLimit;
+	Score = from.Score;
+	SolutionType = from.SolutionType;
+	TargetPath = from.TargetPath;
 }
-bool solution::compile() throw (const char *)
-{
-	puts("compile");
-	if (!lang_exist[lang]) {
+
+bool Solution::CompileUserCode() throw(const char *) {
+	puts("CompileUserCode");
+	if (!lang_exist[LanguageType]) {
 		throw "Language doesn't exist";
 	}
 	std::string filename("target.");
-	filename += lang_ext[lang];
+	filename += lang_ext[LanguageType];
 
 	FILE *code_file = fopen(filename.c_str(), "wb");
 	if (code_file == NULL) {
-		throw "Write code file failed";
+		throw "Write UserCode file failed";
 	}
 
-	int size = code.size();
-	fwrite(code.c_str(), 1, size, code_file);
+	int size = (int) UserCode.size();
+	fwrite(UserCode.c_str(), 1, size, code_file);
 	fclose(code_file);
 
 #ifdef _WIN32
-	int ret = system((std::string("..\\win32_run_compiler.exe \"") + lang_compiler[lang] + ' ' + filename + '"').c_str());
+	int ret = system((std::string("..\\win32_run_compiler.exe \"") + lang_compiler[LanguageType] + ' ' + filename + '"').c_str());
 	if (ret) {
-		//printf("Can not run compiler using %s\n", (std::string("win32_run_compiler.exe ") + lang_compiler[lang] + ' ' + filename).c_str());
+		//printf("Can not run compiler using %s\n", (std::string("win32_run_compiler.exe ") + lang_compiler[LanguageType] + ' ' + filename).c_str());
 		throw "Can not run compiler";
 	}
 #else
-	std::string command(lang_compiler[lang]);
+	std::string command(lang_compiler[LanguageType]);
 	command += ' ' + filename + " >err.out 2>&1 && echo @~good~@ >err.out";
 	//puts(command.c_str());
 	system(command.c_str());
@@ -121,38 +117,36 @@ bool solution::compile() throw (const char *)
 			applog("Info: Execute file exists, but compiler doesn't return 0.");
 		}
 		delete[] buffer;
-	}
-	else {
+	} else {
 		if (strstr(buffer, "@~good~@") != NULL) {
 			delete[] buffer;
 			throw "Compiler returned 0, but execute file doesn't exist.";
-		}
-		else {
-			last_state = buffer;
-			score = time_limit = mem_limit = 0;
-			error_code = RES_CE;
+		} else {
+			LastState = buffer;
+			Score = TimeLimit = MemoryLimit = 0;
+			ErrorCode = RES_CE;
 			puts("Compile Error");
 			delete[] buffer;
 
-			std::unique_lock<std::mutex> Lock(*(std::mutex*)mutex_for_query);
-			detail_results.push_back({ RES_CE, 0, 0, last_state, 0 });
+			std::unique_lock<std::mutex> Lock(*(std::mutex *) QueryMutex);
+			TestCaseResults.push_back({RES_CE, 0, 0, LastState, 0});
 
 			return false;
 		}
 	}
 	return true;
 }
-void solution::judge() throw (const char *)
-{
+
+void Solution::JudgeSolution() throw(const char *) {
 	char dir_name[MAXPATHLEN + 16], input_filename[MAXPATHLEN + 16];
 	char buffer[MAXPATHLEN * 2 + 16];
-	puts("judge");
+	puts("JudgeSolution");
 
-	sprintf(dir_name, "%s/%d", DataDir, problem);
+	sprintf(dir_name, "%s/%d", DataDir, ProblemFK);
 	DIR *dp = opendir(dir_name);
 	if (dp == NULL) {
-		error_code = RES_SE;
-		last_state = "No data files";
+		ErrorCode = RES_SE;
+		LastState = "No data files";
 		throw "Can't open data dir";
 	}
 	std::vector<std::string> in_files;
@@ -167,8 +161,8 @@ void solution::judge() throw (const char *)
 	}
 	closedir(dp);
 	if (in_files.empty()) {
-		error_code = RES_SE;
-		last_state = "No data files";
+		ErrorCode = RES_SE;
+		LastState = "No data files";
 		throw "Data folder is empty";
 	}
 	std::sort(in_files.begin(), in_files.end());
@@ -182,24 +176,21 @@ void solution::judge() throw (const char *)
 	int status;
 	std::string tips;
 	for (std::string &d_name : in_files) {
-		path data_directory(dir_name), filename(d_name), 
-			inputFile, tempFile, outputFile, ansFile;
+		path data_directory(dir_name), filename(d_name),
+				inputFile, tempFile, outputFile, ansFile;
 
 		inputFile = data_directory / d_name;
-		outputFile = "user.out";
+		outputFile = "UserName.out";
 		ansFile = inputFile;
 		ansFile.replace_extension("out");
 
-		if (strlen(TempDir) > 0)
-		{
+		if (strlen(TempDir) > 0) {
 			path temp_directory(TempDir);
 
-			try
-			{
+			try {
 				tempFile = temp_directory / d_name;
 
-				if (exists(tempFile))
-				{
+				if (exists(tempFile)) {
 					remove(tempFile);
 				}
 
@@ -207,150 +198,140 @@ void solution::judge() throw (const char *)
 
 				inputFile = tempFile;
 				outputFile = temp_directory / outputFile;
-                applog("Temp file created.");
+				applog("Temp file created.");
 			}
-			catch (filesystem_error& ex)
-			{
+			catch (filesystem_error &ex) {
 				applog("Failed to create temp file.", ex.what());
 			}
-			
+
 		}
 
-		execute_info result;
+		ExecutionStatus result;
 		int get_score = case_score;
 
-		if (run_judge(target_path, inputFile.string().c_str(), outputFile.string().c_str(), time_limit, (lang_extra_mem[lang] + mem_limit) << 10 /*to byte*/, &result)) {
-			error_code = RES_SE;
-			last_state = "Cannot run target program";
+		if (run_judge(TargetPath, inputFile.string().c_str(), outputFile.string().c_str(), TimeLimit,
+		              (lang_extra_mem[LanguageType] + MemoryLimit) << 10 /*to byte*/, &result)) {
+			ErrorCode = RES_SE;
+			LastState = "Cannot run target program";
 			throw "Cannot run target program";
-		}
-		else if (result.state == 0) {
+		} else if (result.State == 0) {
 
 			FILE *fanswer = fopen(ansFile.string().c_str(), "rb");
 			if (fanswer) {
 				FILE *foutput = fopen(outputFile.string().c_str(), "rb"), *finput;
 				if (foutput) {
-					validator_info info;
+					ValidatorResult info;
 
-					switch (compare_way >> 16) {
-					case CMP_tra:
+					switch (ComparisonMode >> 16) {
+						case CMP_tra:
 #ifdef USE_CENA_VALIDATOR
-						info = validator_cena(fanswer, foutput);
+							SingleTestCaseResult = validator_cena(fanswer, foutput);
 #else
-						info = validator(fanswer, foutput);//traditional OI comparison (Ignore trailing space)
+							info = validator(fanswer, foutput);//traditional OI comparison (Ignore trailing space)
 #endif
-						break;
-					case CMP_float:
-						info = validator_float(fanswer, foutput, (compare_way & 0xffff)); //precision comparison
-						break;
-					case CMP_int:
-						info = validator_int(fanswer, foutput);
-						break;
-					case CMP_spj:
-						sprintf(input_filename, "%s/%s", dir_name, d_name.c_str());
-						info = run_spj(buffer, input_filename, &get_score, dir_name);//in call_ruc.cpp
-						break;
-					default:
-						info.ret = -1; //validator error
+							break;
+						case CMP_float:
+							info = validator_float(fanswer, foutput, (ComparisonMode & 0xffff)); //precision comparison
+							break;
+						case CMP_int:
+							info = validator_int(fanswer, foutput);
+							break;
+						case CMP_spj:
+							sprintf(input_filename, "%s/%s", dir_name, d_name.c_str());
+							info = run_spj(buffer, input_filename, &get_score, dir_name);//in call_ruc.cpp
+							break;
+						default:
+							info.ResultCode = -1; //validator error
 					}
 					fclose(foutput);
 
-					int s = info.ret;
+					int s = info.ResultCode;
 					if (!s) {
 						status = RES_AC;
 						tips = "Good Job!";
 						total_score += get_score;
-					}
-					else if (s == -1) {
+					} else if (s == -1) {
 						status = RES_VE;
 						tips = "Please contact administrator.";
 						get_score = 0;
-					}
-					else if (s == 4) { // for spj
+					} else if (s == 4) { // for spj
 						status = (get_score == case_score) ? RES_AC : RES_WA;
 						total_score += get_score;
-						tips = info.user_mismatch;
-						free(info.user_mismatch);
-					}
-					else {
+						tips = info.UserMismatch;
+						free(info.UserMismatch);
+					} else {
 						status = RES_WA;
 						get_score = 0;
 						if (s == 1) {
 							tips = "Output mismatch.\nYours: ";
-							tips += info.user_mismatch;
+							tips += info.UserMismatch;
 							tips += "\nAnswer: ";
-							tips += info.std_mismatch;
-							free(info.user_mismatch);
-							free(info.std_mismatch);
-						}
-						else if (s == 2)
+							tips += info.StandardMismatch;
+							free(info.UserMismatch);
+							free(info.StandardMismatch);
+						} else if (s == 2)
 							tips = "Your output is longer than standard output.";
 						else if (s == 3)
 							tips = "Your output is shorter than standard output.";
 						else //unknown result
 							tips = "";
 					}
-				}
-				else {
+				} else {
 					status = RES_WA;
 					get_score = 0;
 					tips = "Cannot find output file.";
 				}
 				fclose(fanswer);
-			}
-			else {
+			} else {
 				applog((std::string("Info: No answer file ") + buffer).c_str());
 				get_score = 0;
 				tips = "No answer file";
 				status = RES_WA;
 			}
-		}
-		else { //RE,TLE,MLE
+		} else { //RE,TLE,MLE
 			get_score = 0;
-			status = result.state;
+			status = result.State;
 			if (status == RES_RE)
-				tips = result.str;
+				tips = result.AdditionalInfo->c_str();
 			else
 				tips = "";
 		}
-		total_time += result.time;
-		if (result.memory > max_memory)
-			max_memory = result.memory;
+		total_time += result.Time;
+		if (result.Memory > max_memory)
+			max_memory = result.Memory;
 
 		printf("status %d %s\n", status, tips.c_str());
-		if (error_code == -1 && status != RES_AC) {//only store the first error infomation
-			error_code = status;
-			last_state = tips;
+		if (ErrorCode == -1 && status != RES_AC) {//only store the first error infomation
+			ErrorCode = status;
+			LastState = tips;
 		}
 
-		if (!tempFile.empty() && exists(tempFile))
-		{
+		if (!tempFile.empty() && exists(tempFile)) {
 			remove(tempFile);
 		}
 
-		if (exists(outputFile))
-		{
+		if (exists(outputFile)) {
 			remove(outputFile);
 		}
 
-		std::unique_lock<std::mutex> Lock(*(std::mutex*)mutex_for_query);
-		detail_results.push_back({ status, result.time, result.memory, tips, get_score });
+		std::unique_lock<std::mutex> Lock(*(std::mutex *) QueryMutex);
+		TestCaseResults.push_back({status, result.Time, result.Memory, tips, get_score});
 	}
 
-	if (error_code == -1) //No error
-		error_code = RES_AC;
+	if (ErrorCode == -1) //No error
+		ErrorCode = RES_AC;
 
-	//use score,mem_limit,time_limit to store result
-	score = total_score / double(case_score * in_files.size())*full_score + 0.500001;
-	mem_limit = max_memory;
-	time_limit = total_time;
-	printf("error_code %d, time %dms, memory %dkB, score %d\n", error_code, time_limit, mem_limit, score);
+	//use CaseScore,MemoryLimit,TimeLimit to store result
+	Score = total_score / double(case_score * in_files.size()) * full_score + 0.500001;
+	MemoryLimit = max_memory;
+	TimeLimit = total_time;
+	printf("ErrorCode %d, TimeLimit %dms, MemoryLimit %dkB, CaseScore %d\n", ErrorCode, TimeLimit, MemoryLimit, Score);
 }
-void solution::write_database() throw (const char *)
-{
+
+void Solution::WriteResultToDB() throw(const char *) {
 	int id = get_next_solution_id();
 	printf("solution_id: %d\n", id);
-	if (this->user.size() == 0)
+	if (this->UserName.size() == 0)
 		throw "User id is empty";
 	write_result_to_database(id, this);
 }

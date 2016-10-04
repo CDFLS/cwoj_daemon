@@ -1,4 +1,7 @@
 # 成外 OJ 评测守护程序
+
+[![Build Status](https://jenkins.t123yh.xyz/buildStatus/icon?job=CwojDaemon)](https://jenkins.t123yh.xyz/job/CwojDaemon/)
+
 本程序为成外 OJ 评测守护程序。成外 OJ 网页端在[这里](https://github.com/CDFLS/CWOJ)。  
 
 **警告** 当前守护程序会以 root 权限运行。以后将加入更多的安全设置，并会增强安全措施。
