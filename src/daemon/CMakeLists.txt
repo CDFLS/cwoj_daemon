@@ -19,6 +19,6 @@ CopyConfigFileIfNotExist(
 )
 CopyConfigFileIfNotExist(
         "${CMAKE_SOURCE_DIR}/cwojdaemon.service"
-        "/lib/systemd/cwojdaemon.service"
-        "/lib/systemd/"
+        "/lib/systemd/system/cwojdaemon.service"
+        "/lib/systemd/system/"
 )
