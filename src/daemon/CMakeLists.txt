@@ -12,13 +12,13 @@ target_link_libraries(cwoj_daemon_daemon ${CMAKE_THREAD_LIBS_INIT})
 install(PROGRAMS ${CMAKE_SOURCE_DIR}/bin/cwoj_daemon_daemon DESTINATION bin)
 
 include("../../ConfigFile.cmake")
-CopyConfigFileIfNotExists(
+CopyConfigFileIfNotExist(
         "${CMAKE_SOURCE_DIR}/cwojconfig.ini"
         "/etc/cwojconfig.ini"
         "/etc/"
 )
-CopyConfigFileIfNotExists(
+CopyConfigFileIfNotExist(
         "${CMAKE_SOURCE_DIR}/cwojdaemon.service"
-        "/etc/systemd/system/cwojdaemon.service"
-        "/etc/systemd/system/"
+        "/lib/systemd/cwojdaemon.service"
+        "/lib/systemd/"
 )
