@@ -133,7 +133,7 @@ void write_result_to_database(int solution_id, Solution *data) throw(const char 
 		delta = data->Score - delta;
 	else
 		delta = 0;
-	if (data->ErrorCode == RES_CE) {
+	if (data->ErrorCode == ResultType::RESULT_COMPILE_ERROR) {
 		puts("insert compileinfo");
 		int len = data->LastState.length();
 		char *info_escape = (char *) malloc(len * 2 + 3);
@@ -151,7 +151,7 @@ void write_result_to_database(int solution_id, Solution *data) throw(const char 
 	        "insert into Solution (solution_id,problem_id,user_id,TimeLimit,MemoryLimit,in_date,result,CaseScore,language,valid,code_length,IsCodeOpenSource) VALUES "
 			        "(%d,%d,'%s',%d,%d,NOW(),%d,%d,%d,%d,%d,%d)", solution_id, data->ProblemFK, data->UserName.c_str(),
 	        data->TimeLimit, data->MemoryLimit, data->ErrorCode, data->Score, data->LanguageType,
-	        (int) (valid && data->ErrorCode == RES_AC), code_length, (int) data->IsCodeOpenSource);
+	        (int) (valid && data->ErrorCode == ResultType::RESULT_ACCEPT), code_length, (int) data->IsCodeOpenSource);
 	if (mysql_query(hMySQL, statements))
 		throw "insert Solution";
 	if (1 != mysql_affected_rows(hMySQL))
@@ -169,7 +169,7 @@ void write_result_to_database(int solution_id, Solution *data) throw(const char 
 		throw "insert source failed";
 
 	puts("update UserName SingleTestCaseResult");
-	int is_first_solved = (int) (valid && data->ErrorCode == RES_AC);
+	int is_first_solved = (int) (valid && data->ErrorCode == ResultType::RESULT_ACCEPT);
 	sprintf(statements,
 	        "update users,(SELECT experience from level_experience where level=get_problem_level(%d))as t set submit=submit+1,solved=solved+%d,CaseScore=CaseScore+%d,users.experience=users.experience+IFNULL(t.experience,0)*%d,language=%d where user_id='%s'",
 	        data->ProblemFK, is_first_solved, delta, is_first_solved, data->LanguageType, data->UserName.c_str());
@@ -181,7 +181,7 @@ void write_result_to_database(int solution_id, Solution *data) throw(const char 
 	puts("update ProblemFK SingleTestCaseResult");
 	sprintf(statements,
 	        "update ProblemFK set submit=submit+1,accepted=accepted+%d,submit_user=submit_user+%d,solved=solved+%d where problem_id=%d",
-	        (int) (data->ErrorCode == RES_AC),
+	        (int) (data->ErrorCode == ResultType::RESULT_ACCEPT),
 	        (int) (valid && !haveSubmitted(data->ProblemFK, data->UserName.c_str(), solution_id)), is_first_solved,
 	        data->ProblemFK);
 	if (mysql_query(hMySQL, statements))

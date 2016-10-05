@@ -52,7 +52,7 @@ Solution::Solution() {
 	ProblemFK = ComparisonMode = LanguageType = TimeLimit = MemoryLimit = Score = ErrorCode = 0;
 	IsCodeOpenSource = 0;
 	TimeStamp = 0;
-	SolutionType = TYPE_normal;
+	SolutionType = JudgeType::JT_NORMAL;
 }
 
 Solution::~Solution() {
@@ -124,12 +124,12 @@ bool Solution::CompileUserCode() throw(const char *) {
 		} else {
 			LastState = buffer;
 			Score = TimeLimit = MemoryLimit = 0;
-			ErrorCode = RES_CE;
+			ErrorCode = ResultType::RESULT_COMPILE_ERROR;
 			puts("Compile Error");
 			delete[] buffer;
 
 			std::unique_lock<std::mutex> Lock(*(std::mutex *) QueryMutex);
-			TestCaseResults.push_back({RES_CE, 0, 0, LastState, 0});
+			TestCaseResults.push_back({ResultType::RESULT_COMPILE_ERROR, 0, 0, LastState, 0});
 
 			return false;
 		}
@@ -138,6 +138,37 @@ bool Solution::CompileUserCode() throw(const char *) {
 }
 
 void Solution::JudgeSolution() throw(const char *) {
+	// Test Code Start -- Yoto
+	string testOut;
+	testOut += "ProblemFK = " + to_string(ProblemFK) + "\n";
+	testOut += "ComparisonMode = " + to_string(ProblemFK) + "\n";
+	testOut += "LanguageType = " + to_string(ProblemFK) + "\n";
+	testOut += "MemoryLimit = " + to_string(ProblemFK) + "\n";
+	testOut += "Score = " + to_string(ProblemFK) + "\n";
+	testOut += "ErrorCode = " + to_string(ProblemFK) + "\n";
+	testOut += "IsCodeOpenSource = " + to_string(ProblemFK) + "\n";
+	testOut += "SolutionType = " + to_string(ProblemFK) + "\n";
+	testOut += "UserName = " + to_string(ProblemFK) + "\n";
+	testOut += "Key = " + to_string(ProblemFK) + "\n";
+	testOut += "LastState = " + to_string(ProblemFK) + "\n";
+	testOut += "TimeStamp = " + to_string(ProblemFK) + "\n";
+	testOut += "TargetPath = " + to_string(ProblemFK) + "\n";
+
+	int counter = 0;
+	for (SingleTestCaseResult &tc : TestCaseResults) {
+		testOut += "TestCaseResults[" + to_string(counter) + "] = { ";
+		testOut += "ErrorCode = " + to_string(tc.ErrorCode) + ", ";
+		testOut += "TimeLimit = " + to_string(tc.TimeLimit) + ", ";
+		testOut += "MemoryLimit = " + to_string(tc.MemoryLimit) + ", ";
+		testOut += "ResultDetail" + tc.ResultDetail + ", ";
+		testOut += "CaseScore" + to_string(tc.CaseScore) + " }\n";
+		counter++;
+	}
+
+	testOut += "UserCode = " + to_string(ProblemFK) + "\n";
+	applog("Debug - Solution Key", testOut);
+	// FIXME Test Code End -- Yoto
+
 	char dir_name[MAXPATHLEN + 16], input_filename[MAXPATHLEN + 16];
 	char buffer[MAXPATHLEN * 2 + 16];
 	puts("JudgeSolution");
@@ -145,7 +176,7 @@ void Solution::JudgeSolution() throw(const char *) {
 	sprintf(dir_name, "%s/%d", DataDir, ProblemFK);
 	DIR *dp = opendir(dir_name);
 	if (dp == NULL) {
-		ErrorCode = RES_SE;
+		ErrorCode = ResultType::RESULT_SYSTEM_ERROR;
 		LastState = "No data files";
 		throw "Can't open data dir";
 	}
@@ -161,7 +192,7 @@ void Solution::JudgeSolution() throw(const char *) {
 	}
 	closedir(dp);
 	if (in_files.empty()) {
-		ErrorCode = RES_SE;
+		ErrorCode = ResultType::RESULT_SYSTEM_ERROR;
 		LastState = "No data files";
 		throw "Data folder is empty";
 	}
@@ -211,7 +242,7 @@ void Solution::JudgeSolution() throw(const char *) {
 
 		if (run_judge(TargetPath, inputFile.string().c_str(), outputFile.string().c_str(), TimeLimit,
 		              (lang_extra_mem[LanguageType] + MemoryLimit) << 10 /*to byte*/, &result)) {
-			ErrorCode = RES_SE;
+			ErrorCode = ResultType::RESULT_SYSTEM_ERROR;
 			LastState = "Cannot run target program";
 			throw "Cannot run target program";
 		} else if (result.State == 0) {
@@ -247,20 +278,20 @@ void Solution::JudgeSolution() throw(const char *) {
 
 					int s = info.ResultCode;
 					if (!s) {
-						status = RES_AC;
+						status = ResultType::RESULT_ACCEPT;
 						tips = "Good Job!";
 						total_score += get_score;
 					} else if (s == -1) {
-						status = RES_VE;
+						status = ResultType::RESULT_VALIDATOR_ERROR;
 						tips = "Please contact administrator.";
 						get_score = 0;
 					} else if (s == 4) { // for spj
-						status = (get_score == case_score) ? RES_AC : RES_WA;
+						status = (get_score == case_score) ? ResultType::RESULT_ACCEPT : ResultType::RESULT_WRONG_ANSWER;
 						total_score += get_score;
 						tips = info.UserMismatch;
 						free(info.UserMismatch);
 					} else {
-						status = RES_WA;
+						status = ResultType::RESULT_WRONG_ANSWER;
 						get_score = 0;
 						if (s == 1) {
 							tips = "Output mismatch.\nYours: ";
@@ -277,7 +308,7 @@ void Solution::JudgeSolution() throw(const char *) {
 							tips = "";
 					}
 				} else {
-					status = RES_WA;
+					status = ResultType::RESULT_WRONG_ANSWER;
 					get_score = 0;
 					tips = "Cannot find output file.";
 				}
@@ -286,12 +317,12 @@ void Solution::JudgeSolution() throw(const char *) {
 				applog((std::string("Info: No answer file ") + buffer).c_str());
 				get_score = 0;
 				tips = "No answer file";
-				status = RES_WA;
+				status = ResultType::RESULT_WRONG_ANSWER;
 			}
 		} else { //RE,TLE,MLE
 			get_score = 0;
 			status = result.State;
-			if (status == RES_RE)
+			if (status == ResultType::RESULT_RUNTIME_ERROR)
 				tips = result.AdditionalInfo->c_str();
 			else
 				tips = "";
@@ -301,7 +332,7 @@ void Solution::JudgeSolution() throw(const char *) {
 			max_memory = result.Memory;
 
 		printf("status %d %s\n", status, tips.c_str());
-		if (ErrorCode == -1 && status != RES_AC) {//only store the first error infomation
+		if (ErrorCode == -1 && status != ResultType::RESULT_ACCEPT) {//only store the first error infomation
 			ErrorCode = status;
 			LastState = tips;
 		}
@@ -319,7 +350,7 @@ void Solution::JudgeSolution() throw(const char *) {
 	}
 
 	if (ErrorCode == -1) //No error
-		ErrorCode = RES_AC;
+		ErrorCode = ResultType::RESULT_ACCEPT;
 
 	//use CaseScore,MemoryLimit,TimeLimit to store result
 	Score = total_score / double(case_score * in_files.size()) * full_score + 0.500001;

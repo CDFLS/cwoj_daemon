@@ -52,8 +52,8 @@ void json_builder(std::ostringstream &json, Solution *target) {
 		json << "{\"State\":\"finish\",\"detail\":[";
 	else
 		json << "{\"State\":\"wait\",\"detail\":[";
-	/*if(target->ErrorCode == RES_CE){
-		json<<RES_CE<<",0,0,"<<encoder(target->LastState)<<"]}";
+	/*if(target->ErrorCode == ResultType::RESULT_COMPILE_ERROR){
+		json<<ResultType::RESULT_COMPILE_ERROR<<",0,0,"<<encoder(target->LastState)<<"]}";
 		return;
 	}*/
 	for (SingleTestCaseResult &c : target->TestCaseResults)

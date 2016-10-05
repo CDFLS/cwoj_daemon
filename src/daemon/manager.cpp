@@ -72,6 +72,10 @@ void applog(const char *str, const char *info) throw() {
 	fflush(stdout);
 }
 
+void applog(std::string tag, std::string content) throw() {
+	applog(tag.c_str(), content.c_str());
+}
+
 void json_builder(std::ostringstream &, Solution *);
 
 char *JUDGE_get_progress(const char *query) {
@@ -166,7 +170,7 @@ void thread_judge() {
 			}
 			if (cur->CompileUserCode())
 				cur->JudgeSolution();
-			if (cur->SolutionType == TYPE_normal) {
+			if (cur->SolutionType == JudgeType::JT_NORMAL) {
 				cur->WriteResultToDB();
 			}
 			cur->TimeStamp = time(0);
@@ -178,7 +182,7 @@ void thread_judge() {
 			try {
 				std::unique_lock<std::mutex> Lock_map(*(std::mutex *) (cur->QueryMutex));
 				cur->TestCaseResults.clear();
-				cur->TestCaseResults.push_back({RES_SE, 0, 0, cur->LastState, 0});
+				cur->TestCaseResults.push_back({ResultType::RESULT_SYSTEM_ERROR, 0, 0, cur->LastState, 0});
 				cur->TimeStamp = time(0);
 
 #ifdef DUMP_FOR_DEBUG
@@ -186,7 +190,7 @@ void thread_judge() {
 				message += cur->key;
 				std::ofstream dump_f(message.c_str());
 				if(dump_f.is_open()) {
-					dump_f << cur->raw_post_data;
+					dump_f << cur->RawPostData;
 					dump_f.close();
 					puts("Dump file created");
 				}
@@ -196,10 +200,10 @@ void thread_judge() {
 			}
 		}
 
-		if (cur->SolutionType == TYPE_normal) {
+		if (cur->SolutionType == JudgeType::JT_NORMAL) {
 			std::unique_lock<std::mutex> Lock(removing_mutex);
 			removing.push(cur);
-		} else if (cur->SolutionType == TYPE_rejudge) {
+		} else if (cur->SolutionType == JudgeType::JT_REJUDGE) {
 			rejudging = false;
 		}
 	}

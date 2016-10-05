@@ -47,38 +47,38 @@ static int iterate_post(void *arg, enum MHD_ValueKind, const char *name,
 	//printf("[%s]->[%s] %lld %d\n", name, data, offset, size);
 	switch (*name - 'a') {
 		//A number may be separated into two parts
-		case MSG_problem:
+		case HttpMessageType::MSG_PROBLEM:
 			numcat(p->ProblemFK, data, size);
 			break;
-		case MSG_lang:
+		case HttpMessageType::MSG_LANGUAGE:
 			numcat(p->LanguageType, data, size);
 			break;
-		case MSG_time:
+		case HttpMessageType::MSG_TIME:
 			numcat(p->TimeLimit, data, size);
 			break;
-		case MSG_mem:
+		case HttpMessageType::MSG_MEMORY:
 			numcat(p->MemoryLimit, data, size);
 			break;
-		case MSG_score:
+		case HttpMessageType::MSG_SCORE:
 			numcat(p->Score, data, size);
 			break;
-		case MSG_code:
+		case HttpMessageType::MSG_CODE:
 			p->UserCode.append(data, size);
 			break;
-		case MSG_user:
+		case HttpMessageType::MSG_USER:
 			p->UserName.append(data, size);
 			break;
-		case MSG_key:
+		case HttpMessageType::MSG_KEY:
 			p->Key.append(data, size);
 			break;
-		case MSG_share:
+		case HttpMessageType::MSG_SHARE:
 			p->IsCodeOpenSource = *data - '0';
 			break;
-		case MSG_compare:
+		case HttpMessageType::MSG_COMPARE:
 			numcat(p->ComparisonMode, data, size);
 			break;
-		case MSG_rejudge:
-			p->SolutionType = *data - '0';
+		case MSG_REJUDGE:
+			p->SolutionType = (unsigned char) (*data - '0');
 			break;
 	}
 	return MHD_YES;
@@ -146,7 +146,7 @@ static int server_handler(
 		pair *p = (pair *) *con_cls;
 		if (0 != *upload_size) { //next, read body
 #ifdef DUMP_FOR_DEBUG
-			p->second->raw_post_data.append(upload_data, *upload_size);
+			p->second->RawPostData.append(upload_data, *upload_size);
 #endif
 			MHD_post_process(p->first, upload_data, *upload_size);
 			*upload_size = 0;
@@ -155,7 +155,7 @@ static int server_handler(
 		} else { //last TimeLimit, finish reading
 			//puts("last");
 			char *result;
-			if (p->second->SolutionType == TYPE_rejudge)
+			if (p->second->SolutionType == JudgeType::JT_REJUDGE)
 				result = JUDGE_start_rejudge(p->second);
 			else
 				result = JUDGE_accept_submit(p->second);

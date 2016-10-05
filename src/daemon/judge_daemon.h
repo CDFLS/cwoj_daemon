@@ -17,8 +17,9 @@ public:
 	unsigned char SolutionType;
 	std::string UserCode, UserName, Key, LastState; // FIXME IDKWIM Key
 	std::vector<SingleTestCaseResult> TestCaseResults;
-	std::mutex *QueryMutex;//use void* to avoid including <mutex> (Oh fuck you why? -- Yoto)
+	std::mutex *QueryMutex; //use void* to avoid including <mutex> (Oh fuck you why? -- Yoto)
 	time_t TimeStamp;
+	std::string RawPostData; // This should never be used.
 //	The following code was never used
 //#ifdef DUMP_FOR_DEBUG
 //	std::string raw_post_data;
@@ -46,24 +47,31 @@ struct ValidatorResult {
 	char *StandardMismatch; // FIXME IDKWIM
 };
 
-enum {
-	TYPE_normal = 0, TYPE_rejudge = 1
+enum JudgeType {
+	JT_NORMAL = 0, JT_REJUDGE = 1
 };
-enum {
-	MSG_problem,
-	MSG_lang,
-	MSG_time,
-	MSG_mem,
-	MSG_score,
-	MSG_code,
-	MSG_user,
-	MSG_key,
-	MSG_share,
-	MSG_compare,
-	MSG_rejudge
+enum HttpMessageType {
+	MSG_PROBLEM,
+	MSG_LANGUAGE,
+	MSG_TIME,
+	MSG_MEMORY,
+	MSG_SCORE,
+	MSG_CODE,
+	MSG_USER,
+	MSG_KEY, // FIXME IDKWIM
+	MSG_SHARE,
+	MSG_COMPARE,
+	MSG_REJUDGE
 };
-enum {
-	RES_AC = 0, RES_CE = 7, RES_TLE = 2, RES_MLE = 3, RES_WA = 4, RES_RE = 5, RES_VE = 99, RES_SE = 100
+enum ResultType {
+	RESULT_ACCEPT = 0,
+	RESULT_COMPILE_ERROR = 7,
+	RESULT_TIME_LIMIT_EXCEEDED = 2, // FIXME No usage
+	RESULT_MEMORY_LIMIT_EXCEEDED = 3, // FIXME No usage
+	RESULT_WRONG_ANSWER = 4,
+	RESULT_RUNTIME_ERROR = 5,
+	RESULT_VALIDATOR_ERROR = 99,
+	RESULT_SYSTEM_ERROR = 100
 };
 
 typedef int (*run_compiler_def)(const char *, char *, int);
@@ -73,6 +81,8 @@ typedef int (*run_judge_def)(const char *, const char *, const char *, int, int,
 std::string getTargetPath();
 
 void applog(const char *str, const char *info = "") throw();
+
+void applog(std::string tag, std::string content) throw();
 
 bool read_config();
 
