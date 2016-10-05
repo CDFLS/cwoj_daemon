@@ -82,7 +82,7 @@ std::string getTargetPath();
 
 void applog(const char *str, const char *info = "") throw();
 
-void applog(std::string tag, std::string content) throw();
+void applog(std::string tag, std::string content = "") throw();
 
 bool read_config();
 

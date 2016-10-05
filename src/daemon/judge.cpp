@@ -166,7 +166,7 @@ void Solution::JudgeSolution() throw(const char *) {
 	}
 
 	testOut += "UserCode = " + to_string(ProblemFK) + "\n";
-	applog("Debug - Solution Key", testOut);
+	applog(testOut.c_str());
 	// FIXME Test Code End -- Yoto
 
 	char dir_name[MAXPATHLEN + 16], input_filename[MAXPATHLEN + 16];
