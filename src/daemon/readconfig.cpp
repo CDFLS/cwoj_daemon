@@ -5,8 +5,6 @@
 
 using std::string;
 
-#define MAXLANG 10
-
 int lang_extra_mem[MAXLANG];
 bool lang_exist[MAXLANG];
 string lang_ext[MAXLANG];
@@ -21,17 +19,17 @@ char TempDir[MAXPATHLEN + 16];
 
 typedef INI<string, string, string> ini_t;
 
-bool read_config() {
+bool ReadConfigurationFile() {
 	ini_t ini("/etc/cwojconfig.ini", false);
 	if (!ini.Parse()) {
-		applog("Error: Cannot open /etc/cwojconfig.ini, Exit...");
+		OutputLog("Error: Cannot open /etc/cwojconfig.ini, Exit...");
 		exit(1);
 	}
 
 	ini.Select("system");
 	std::string tmp = ini.Get(std::string("datadir"), std::string(""));
 	if (tmp == "") {
-		applog("Error: We don't know your data directory.");
+		OutputLog("Error: We don't know your data directory.");
 		return false;
 	}
 	strncpy(DataDir, tmp.c_str(), MAXPATHLEN);
@@ -58,11 +56,11 @@ bool read_config() {
 
 	for (auto i = ini.sections.begin(); i != ini.sections.end(); ++i) {
 		const string &lang = i->first;
-		if (lang.find("LanguageType") != 0)
+		if (lang.find("lang") != 0)
 			continue;
 		int num = atoi(lang.c_str() + 4);
 		if (!num || num > MAXLANG) {
-			applog("Info: Language number is not correct.");
+			OutputLog("Info: Language number is not correct.");
 			return false;
 		}
 		num--;

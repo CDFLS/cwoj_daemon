@@ -160,7 +160,7 @@ static void set_resource_limits(struct sablebox *pbox) {
 	struct rlimit rlbuf;
 	int ret = 0;
 
-	/*CPU TimeLimit limit, one more second allowed for accuracy*/
+	/*CPU time limit, one more second allowed for accuracy*/
 	rlbuf.rlim_cur = rlbuf.rlim_max = (pbox->cpu_lim + 999) / 1000;
 	ret += setrlimit(RLIMIT_CPU, &rlbuf);
 
@@ -293,7 +293,7 @@ int to_microseconds(struct timeval val) {
 
 
 /***************WARNING! THIS PART MAY BE NOT PORTABLE!!!**********************/
-/*Use size utils to count static MemoryLimit.*/
+/*Use size utils to count static memory.*/
 long static_memory(const char *p) {
 	char cmdbuf[4096];
 	sprintf(cmdbuf, "size %s | awk '{if(NR==2)print $4;}'\n", p);

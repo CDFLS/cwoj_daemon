@@ -21,7 +21,7 @@ extern int inet_aton(const char *cp_arg, struct in_addr *addr);
 
 static char robots_txt[] = "User-agent: *\nDisallow: /\n";
 
-typedef std::pair<MHD_PostProcessor *, Solution *> pair;
+typedef std::pair<MHD_PostProcessor *, solution *> pair;
 
 int ignore_requst(struct MHD_Connection *connection) {
 	struct MHD_Response *response =
@@ -41,44 +41,44 @@ void numcat(T &left, const char *right, size_t sz) {
 
 static int iterate_post(void *arg, enum MHD_ValueKind, const char *name,
                         const char *, const char *, const char *, const char *data, uint64_t offset, size_t size) {
-	Solution *p = ((pair *) arg)->second;
+	solution *p = ((pair *) arg)->second;
 	if (!size)
 		return MHD_YES;
 	//printf("[%s]->[%s] %lld %d\n", name, data, offset, size);
 	switch (*name - 'a') {
 		//A number may be separated into two parts
-		case HttpMessageType::MSG_PROBLEM:
+		case MESSAGE_PROBLEM:
 			numcat(p->ProblemFK, data, size);
 			break;
-		case HttpMessageType::MSG_LANGUAGE:
+		case MESSAGE_LANGUAGE:
 			numcat(p->LanguageType, data, size);
 			break;
-		case HttpMessageType::MSG_TIME:
+		case MESSAGE_TIME:
 			numcat(p->TimeLimit, data, size);
 			break;
-		case HttpMessageType::MSG_MEMORY:
+		case MESSAGE_MEMORY:
 			numcat(p->MemoryLimit, data, size);
 			break;
-		case HttpMessageType::MSG_SCORE:
-			numcat(p->Score, data, size);
+		case MESSAGE_SCORE:
+			numcat(p->SolutionScore, data, size);
 			break;
-		case HttpMessageType::MSG_CODE:
-			p->UserCode.append(data, size);
+		case MESSAGE_CODE:
+			p->SourceCode.append(data, size);
 			break;
-		case HttpMessageType::MSG_USER:
+		case MESSAGE_USER:
 			p->UserName.append(data, size);
 			break;
-		case HttpMessageType::MSG_KEY:
+		case MESSAGE_KEY:
 			p->Key.append(data, size);
 			break;
-		case HttpMessageType::MSG_SHARE:
-			p->IsCodeOpenSource = *data - '0';
+		case MESSAGE_SHARE:
+			p->IsCodeOpenSourced = *data - '0';
 			break;
-		case HttpMessageType::MSG_COMPARE:
+		case MESSAGE_COMPARE:
 			numcat(p->ComparisonMode, data, size);
 			break;
-		case MSG_REJUDGE:
-			p->SolutionType = (unsigned char) (*data - '0');
+		case MESSAGE_REJUDGE:
+			p->SolutionType = *data - '0';
 			break;
 	}
 	return MHD_YES;
@@ -87,13 +87,13 @@ static int iterate_post(void *arg, enum MHD_ValueKind, const char *name,
 static int server_handler(
 		void *cls, struct MHD_Connection *connection, const char *url, const char *method,
 		const char *version, const char *upload_data, size_t *upload_size, void **con_cls) {
-	if (NULL == *con_cls) { //first TimeLimit, read header
+	if (NULL == *con_cls) { //first time, read header
 		//puts("first");
 		//printf("%s %s\n", method, url);
 
 		if (strcmp(method, "GET") == 0) {
 			char *result;
-			applog(url);
+			OutputLog(url);
 			if (strstr(url, "/query_") == url) {
 				if (result = JUDGE_get_progress(url)) {
 					struct MHD_Response *response =
@@ -128,7 +128,7 @@ static int server_handler(
 				return MHD_NO;
 			*con_cls = p;
 
-			Solution *body = new Solution;
+			solution *body = new solution;
 			if (NULL == body)
 				return MHD_NO;
 			p->second = body;
@@ -152,10 +152,10 @@ static int server_handler(
 			*upload_size = 0;
 			//puts("next");
 			return MHD_YES;
-		} else { //last TimeLimit, finish reading
+		} else { //last time, finish reading
 			//puts("last");
 			char *result;
-			if (p->second->SolutionType == JudgeType::JT_REJUDGE)
+			if (p->second->SolutionType == JUDGE_ACTION_REJUDGE)
 				result = JUDGE_start_rejudge(p->second);
 			else
 				result = JUDGE_accept_submit(p->second);
@@ -194,14 +194,14 @@ static int on_client_connect(void *cls, const struct sockaddr *addr, socklen_t a
 	return MHD_NO;
 }
 
-bool start_http_interface() {
+bool StartHttpInterface() {
 	struct MHD_Daemon *handle;
 	struct sockaddr_in sock_addr;
 
 	sock_addr.sin_family = AF_INET;
 	sock_addr.sin_port = htons(HTTP_BIND_PORT);
 	if (!inet_aton(HTTP_BIND_IP, &sock_addr.sin_addr)) {
-		applog("Error: Invalid IP address.", HTTP_BIND_IP);
+		OutputLog("Error: Invalid IP address.", HTTP_BIND_IP);
 		return false;
 	}
 	// printf("listen %s:%d\n", HTTP_BIND_IP, HTTP_BIND_PORT);
@@ -210,7 +210,7 @@ bool start_http_interface() {
 	                          &on_client_connect, NULL, &server_handler, NULL, MHD_OPTION_NOTIFY_COMPLETED,
 	                          request_completed, NULL, MHD_OPTION_SOCK_ADDR, &sock_addr, MHD_OPTION_END);
 	if (handle == NULL) {
-		applog("Error: Unable to start http server.");
+		OutputLog("Error: Unable to start http server.");
 		return false;
 	}
 	return true;

@@ -201,7 +201,7 @@
 "lremovexattr", /* 198 */
 "fremovexattr", /* 199 */
 "tkill", /* 200 */
-"TimeLimit",  /* 201 */
+"time",  /* 201 */
 "futex", /* 202 */
 "sched_setaffinity",/* 203 */
 "sched_getaffinity",/* 204 */

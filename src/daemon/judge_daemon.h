@@ -3,108 +3,117 @@
 #include <ctime>
 #include <mutex>
 
-class SingleTestCaseResult {
+enum JudgeActionType {
+	JUDGE_ACTION_NORMAL = 0, JUDGE_ACTION_REJUDGE = 1
+};
+
+enum HttpMessageType {
+	MESSAGE_PROBLEM,
+	MESSAGE_LANGUAGE,
+	MESSAGE_TIME,
+	MESSAGE_MEMORY,
+	MESSAGE_SCORE,
+	MESSAGE_CODE,
+	MESSAGE_USER,
+	MESSAGE_KEY,
+	MESSAGE_SHARE,
+	MESSAGE_COMPARE,
+	MESSAGE_REJUDGE
+};
+
+enum JudgeResultType {
+	SOLUTION_ACCEPT = 0,
+	SOLUTION_COMPARISON_ERROR = 7,
+	SOLUTION_TIME_LIMIT_EXCEEDED = 2,
+	SOLUTION_MEMORY_LIMIT_EXCEEDED = 3,
+	SOLUTION_WRONG_ANSWER = 4,
+	SOLUTION_RUNTIME_ERROR = 5,
+	SOLUTION_VALIDATOR_ERROR = 99,
+	SOLUTION_SYSTEM_ERROR = 100
+};
+
+enum ValidatorResult {
+	VALIDATOR_FUCKED = -1,
+	VALIDATOR_IDENTICAL = 0,
+	VALIDATOR_MISMATCH = 1,
+	VALIDATOR_LONGER = 2,
+	VALIDATOR_SHORTER = 3
+};
+
+class SingleTestCaseReport {
 public:
-	int ErrorCode, TimeLimit, MemoryLimit;
-	std::string ResultDetail;
+	int ErrorCode, TimeProfile, MemoryProfile;
+	std::string AdditionalInformation;
 	int CaseScore;
 };
 
-class Solution {
-public:
-	int ProblemFK, ComparisonMode, LanguageType, TimeLimit, MemoryLimit, Score, ErrorCode;
-	bool IsCodeOpenSource;
-	unsigned char SolutionType;
-	std::string UserCode, UserName, Key, LastState; // FIXME IDKWIM Key
-	std::vector<SingleTestCaseResult> TestCaseResults;
-	std::mutex *QueryMutex; //use void* to avoid including <mutex> (Oh fuck you why? -- Yoto)
-	time_t TimeStamp;
-	std::string RawPostData; // This should never be used.
-//	The following code was never used
-//#ifdef DUMP_FOR_DEBUG
-//	std::string raw_post_data;
-//#endif
-	std::string TargetPath; // FIXME IDKWIM // Fuck you! you knew std::string, aren't you? Why use const char (*)? I've fixed this for you. -- Yoto
-
-	Solution();
-	~Solution();
-
-	void ClonePropertiesFrom(const Solution &) throw();
-	bool CompileUserCode() throw(const char *);
-	void JudgeSolution() throw(const char *);
-	void WriteResultToDB() throw(const char *);
-};
-
-class ExecutionStatus {
+class ExecutionInfo {
 public:
 	int State, Time, Memory;
-	std::string *AdditionalInfo;
+	char *Info;
 };
 
-struct ValidatorResult {
-	int ResultCode; // FIXME IDKWIM
+class ValidatorInfo {
+public:
+	int Result;
 	char *UserMismatch;
-	char *StandardMismatch; // FIXME IDKWIM
+	char *StandardMismatch;
 };
 
-enum JudgeType {
-	JT_NORMAL = 0, JT_REJUDGE = 1
-};
-enum HttpMessageType {
-	MSG_PROBLEM,
-	MSG_LANGUAGE,
-	MSG_TIME,
-	MSG_MEMORY,
-	MSG_SCORE,
-	MSG_CODE,
-	MSG_USER,
-	MSG_KEY, // FIXME IDKWIM
-	MSG_SHARE,
-	MSG_COMPARE,
-	MSG_REJUDGE
-};
-enum ResultType {
-	RESULT_ACCEPT = 0,
-	RESULT_COMPILE_ERROR = 7,
-	RESULT_TIME_LIMIT_EXCEEDED = 2, // FIXME No usage
-	RESULT_MEMORY_LIMIT_EXCEEDED = 3, // FIXME No usage
-	RESULT_WRONG_ANSWER = 4,
-	RESULT_RUNTIME_ERROR = 5,
-	RESULT_VALIDATOR_ERROR = 99,
-	RESULT_SYSTEM_ERROR = 100
+class solution {
+public:
+	int ProblemFK, ComparisonMode, LanguageType, TimeLimit, MemoryLimit, SolutionScore, ErrorCode;
+	bool IsCodeOpenSourced;
+	unsigned char SolutionType;
+	std::string SourceCode, UserName, Key, LastState;
+	std::vector<SingleTestCaseReport> TestCaseDetail;
+	std::mutex *QueryMutex;//use void* to avoid including <mutex>
+	time_t TimeStamp;
+	const char *TargetPath;
+#ifdef DUMP_FOR_DEBUG
+	std::string RawPostData;
+#endif
+
+	solution();
+	~solution();
+
+	void CloneFrom(const solution &) throw();
+	bool Compile() throw(const char *);
+	void Judge() throw(const char *);
+	void WriteDatabase() throw(const char *);
 };
 
 typedef int (*run_compiler_def)(const char *, char *, int);
 
-typedef int (*run_judge_def)(const char *, const char *, const char *, int, int, ExecutionStatus *);
+typedef int (*run_judge_def)(const char *, const char *, const char *, int, int, ExecutionInfo *);
 
-std::string getTargetPath();
+const char *getTargetPath();
 
-void applog(const char *str, const char *info = "") throw();
+void OutputLog(const char *str, const char *info = "") throw();
 
-void applog(std::string tag, std::string content = "") throw();
+void OutputLog(std::string str, std::string info = "") throw();
 
-bool read_config();
+bool ReadConfigurationFile();
 
-bool start_http_interface();
+bool StartHttpInterface();
 
-bool init_mysql_con() throw();
+bool InitMySQLConnection() throw();
 
 char *JUDGE_get_progress(const char *);
 
-char *JUDGE_accept_submit(Solution *&sol);
+char *JUDGE_accept_submit(solution *&sol);
 
-char *JUDGE_start_rejudge(Solution *&sol);
+char *JUDGE_start_rejudge(solution *&sol);
 
 bool clean_files() throw();
 
 int get_next_solution_id() throw(const char *);
 
-void write_result_to_database(int, Solution *) throw(const char *);
+void write_result_to_database(int, solution *) throw(const char *);
 
-void get_exist_solution_info(int solution_id, Solution *sol) throw(const char *);
+void get_exist_solution_info(int solution_id, solution *sol) throw(const char *);
 
-void update_exist_solution_info(int solution_id, Solution *sol) throw(const char *);
+void update_exist_solution_info(int solution_id, solution *sol) throw(const char *);
 
 void update_problem_rejudged_status(int problem_id) throw(const char *);
 
@@ -112,16 +121,16 @@ void refresh_users_problem(int problem_id) throw(const char *);
 
 void get_solution_list(std::vector<int> &rejudge_list, int problem_id) throw(const char *);
 
-struct ValidatorResult validator_cena(FILE *fstd, FILE *fuser);
+struct ValidatorInfo validator_cena(FILE *fstd, FILE *fuser);
 
 extern "C" {
-struct ValidatorResult validator(FILE *fstd, FILE *fuser);
-struct ValidatorResult validator_int(FILE *fstd, FILE *fuser);
-struct ValidatorResult validator_float(FILE *fstd, FILE *fuser, int);
+struct ValidatorInfo validator(FILE *fstd, FILE *fuser);
+struct ValidatorInfo validator_int(FILE *fstd, FILE *fuser);
+struct ValidatorInfo validator_float(FILE *fstd, FILE *fuser, int);
 }
 
-int run_judge(std::string, const char *, const char *, int, int, ExecutionStatus *);
+int run_judge(const char *, const char *, const char *, int, int, ExecutionInfo *);
 
-ValidatorResult run_spj(char *datafile_out, char *datafile_in, int *score, char *data_dir);
+ValidatorInfo run_spj(char *datafile_out, char *datafile_in, int *score, char *data_dir);
 
 

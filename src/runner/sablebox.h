@@ -28,10 +28,10 @@
 
 /****************** profile type **************************/
 struct profile {
-	int status;                /*results UserCode*/
-	const char *info;        /*extra SingleTestCaseResult when RE*/
-	long time;                /*total usage of TimeLimit*/
-	long memory;            /*peak usage of MemoryLimit*/
+	int status;                /*results code*/
+	const char *info;        /*extra info when RE*/
+	long time;                /*total usage of time*/
+	long memory;            /*peak usage of memory*/
 	unsigned char exit_code;
 };
 /**********************************************************/
@@ -49,8 +49,8 @@ struct scmask {
 struct sablebox {
 	const char *pathname;    /*program tested in the sablebox*/
 	const char *fin, *fout;    /*input/output file for program*/
-	long cpu_lim;            /*TimeLimit limit, including systime and usertime*/
-	long memory_lim;            /*peak MemoryLimit limit, including data, bss, text and heap*/
+	long cpu_lim;            /*time limit, including systime and usertime*/
+	long memory_lim;            /*peak memory limit, including data, bss, text and heap*/
 	struct scmask *scp;        /*syscall allowed in the sablebox*/
 	char **args;
 };

@@ -8,7 +8,7 @@ public:
 	encoder(std::string &in) {
 		buf = (char *) malloc((in.size() << 1) + 3);
 		if (!buf)
-			throw "encoder: Can't allocate MemoryLimit";
+			throw "encoder: Can't allocate memory";
 		char *p = buf;
 		*(p++) = '"';
 		for (char &c : in) {
@@ -47,18 +47,18 @@ public:
 	}
 };
 
-void json_builder(std::ostringstream &json, Solution *target) {
+void json_builder(std::ostringstream &json, solution *target) {
 	if (target->TimeStamp != 0)
-		json << "{\"State\":\"finish\",\"detail\":[";
+		json << "{\"state\":\"finish\",\"detail\":[";
 	else
-		json << "{\"State\":\"wait\",\"detail\":[";
-	/*if(target->ErrorCode == ResultType::RESULT_COMPILE_ERROR){
-		json<<ResultType::RESULT_COMPILE_ERROR<<",0,0,"<<encoder(target->LastState)<<"]}";
+		json << "{\"state\":\"wait\",\"detail\":[";
+	/*if(target->error_code == RES_CE){
+		json<<RES_CE<<",0,0,"<<encoder(target->last_state)<<"]}";
 		return;
 	}*/
-	for (SingleTestCaseResult &c : target->TestCaseResults)
-		json << "[" << c.ErrorCode << ',' << c.TimeLimit << ',' << c.MemoryLimit << ',' << encoder(c.ResultDetail)
-		     << ',' << c.CaseScore << "],";
+	for (SingleTestCaseReport &c : target->TestCaseDetail)
+		json << "[" << c.ErrorCode << ',' << c.TimeProfile << ',' << c.MemoryProfile << ',' << encoder(c.AdditionalInformation) << ',' << c.CaseScore
+		     << "],";
 
 	json << "[]]}";
 }

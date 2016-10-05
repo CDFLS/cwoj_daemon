@@ -6,8 +6,8 @@ translated into C by zyx
 #include <stdlib.h>
 #include <string.h>
 
-struct ValidatorResult {
-	int ResultCode;
+struct ValidatorInfo {
+	int Result;
 	char *UserMismatch;
 	char *StandardMismatch;
 };
@@ -101,8 +101,8 @@ int CheckNow() {
 	return VAL_FUCKED;
 }
 
-struct ValidatorResult validator_cena(FILE *fstd, FILE *fuser) {
-	ValidatorResult result;
+struct ValidatorInfo validator_cena(FILE *fstd, FILE *fuser) {
+	ValidatorInfo result;
 
 	f[0] = fuser;
 	f[1] = fstd;
@@ -115,8 +115,8 @@ struct ValidatorResult validator_cena(FILE *fstd, FILE *fuser) {
 	rewind(fstd);
 	rewind(fuser);
 */
-	result.ResultCode = CheckNow();
-	if (result.ResultCode == VAL_MISMATCH) {
+	result.Result = CheckNow();
+	if (result.Result == VAL_MISMATCH) {
 		result.UserMismatch = (char *) malloc(3);
 		result.StandardMismatch = (char *) malloc(3);
 
@@ -130,7 +130,7 @@ int main()
 {
 	FILE* f1 = fopen("A.txt", "r");
 	FILE* f2 = fopen("B.txt", "r");
-	struct ValidatorResult ret = validator_cena(f1, f2);
+	struct validator_info ret = validator_cena(f1, f2);
 
 	if(ret.ret == VAL_FUCKED)
 		printf("Error\n");
@@ -138,8 +138,8 @@ int main()
 		printf("Identical\n");
 	else if(ret.ret == VAL_MISMATCH){
 		printf("Mismatch\n");
-		printf("UserName output: %s\n", ret.UserMismatch);
-		printf("std output: %s\n", ret.StandardMismatch);
+		printf("user output: %s\n", ret.user_mismatch);
+		printf("std output: %s\n", ret.std_mismatch);
 	}else if(ret.ret == VAL_SHORTER)
 		printf("Shorter\n");
 	else

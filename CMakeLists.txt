@@ -6,7 +6,7 @@ message(STATUS "Please notice that this project can only be built and run on *ni
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
 set(LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lboost_system -Wl,-Bdynamic")
 
 add_subdirectory(src)
 
