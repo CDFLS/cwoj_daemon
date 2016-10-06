@@ -107,6 +107,7 @@ bool ReadConfigurationFile() {
 		pl.CompilationExec = lang_compiler[num];
 		pl.ExtraMemory = lang_extra_mem[num];
 		pl.FileExtension = lang_ext[num];
+		SystemConf.Languages.push_back(pl);
 	}
 
 	/*
