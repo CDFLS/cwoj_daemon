@@ -98,6 +98,7 @@ bool solution::Compile() throw(const char *) {
 	command += ' ' + filename + " >err.out 2>&1 && echo @~good~@ >err.out";
 	//puts(command.c_str());
 	system(command.c_str());
+	OutputLog("Compilation Command = " + command);
 #endif
 	FILE *output = fopen("err.out", "r");
 	if (!output) {
