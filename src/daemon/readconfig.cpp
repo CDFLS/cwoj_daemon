@@ -8,10 +8,12 @@ using std::string;
 bool ReadConfigurationFile() {
 	if (DaemonConfiguration::GetInstance().ReadConfiguration()) {
 		OutputLog("System configuration file parsed successfully.");
+		return true;
 	} else {
 		OutputLog("Error: Configuration file fetal error, terminating process.");
 		exit(1);
 	}
+	return false;
 }
 
 // Backup:
