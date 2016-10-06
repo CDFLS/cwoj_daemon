@@ -14,6 +14,8 @@ using std::string;
 using namespace boost::filesystem;
 typedef INI<string, string, string> SimpleIni;
 
+DaemonConfiguration *SystemConf = nullptr;
+
 DaemonConfiguration::DaemonConfiguration():
 		Languages(std::vector<ProgrammingLanguage>()) {}
 
@@ -135,9 +137,8 @@ bool DaemonConfiguration::ParseIni(std::string path) {
 }
 
 DaemonConfiguration DaemonConfiguration::GetInstance() {
-	static DaemonConfiguration *SingletonInstance;
-	if (SingletonInstance == nullptr) {
-		SingletonInstance = new DaemonConfiguration;
+	if (SystemConf == nullptr) {
+		SystemConf = new DaemonConfiguration();
 	}
-	return *SingletonInstance;
+	return *SystemConf;
 }

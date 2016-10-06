@@ -24,6 +24,8 @@
 
 // FIXME Perform a full-scale test to this new configuration system
 // FIXME Migrate system configuration from the extern variables above to the following new classes
+extern DaemonConfiguration *SystemConf;
+
 class ProgrammingLanguage {
 public:
 	int LanguageId;
