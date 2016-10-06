@@ -76,7 +76,7 @@ bool solution::Compile() throw(const char *) {
 		throw "Language doesn't exist";
 	}
 	std::string filename("target.");
-	filename += SystemConf.IsLanguageExists(LanguageType);
+	filename += SystemConf.FindLanguage(LanguageType)->FileExtension;
 
 	FILE *code_file = fopen(filename.c_str(), "wb");
 	if (code_file == NULL) {
