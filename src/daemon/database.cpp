@@ -28,7 +28,16 @@ bool InitMySQLConnection() throw() {
 	hMySQL = mysql_init(NULL);
 	if (!hMySQL)
 		return false;
-	hMySQL = mysql_real_connect(hMySQL, DATABASE_HOST, DATABASE_USER, DATABASE_PASS, DATABASE_NAME, 0, NULL, 0);
+	hMySQL = mysql_real_connect(
+			hMySQL,
+			DaemonConfiguration::GetInstance().DBHost.c_str(),
+			DaemonConfiguration::GetInstance().DBUser.c_str(),
+			DaemonConfiguration::GetInstance().DBPass.c_str(),
+			DaemonConfiguration::GetInstance().DBName.c_str(),
+			0,
+			NULL,
+			0
+	);
 	if (!hMySQL)
 		return false;
 	if (mysql_set_character_set(hMySQL, "utf8"))

@@ -105,7 +105,11 @@ static int server_handler(
 				}
 			} else if (strcmp(url, "/get_datapath") == 0) {
 				struct MHD_Response *response =
-						MHD_create_response_from_buffer(strlen(DataDir), DataDir, MHD_RESPMEM_PERSISTENT);
+						MHD_create_response_from_buffer(
+								DaemonConfiguration::GetInstance().DataDir.size(),
+								(void *) DaemonConfiguration::GetInstance().DataDir.c_str(),
+								MHD_RESPMEM_PERSISTENT
+						);
 				// MHD_add_response_header(response, "Connection", "close");
 				int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
 				MHD_destroy_response(response);
@@ -199,14 +203,14 @@ bool StartHttpInterface() {
 	struct sockaddr_in sock_addr;
 
 	sock_addr.sin_family = AF_INET;
-	sock_addr.sin_port = htons(HTTP_BIND_PORT);
-	if (!inet_aton(HTTP_BIND_IP, &sock_addr.sin_addr)) {
-		OutputLog("Error: Invalid IP address.", HTTP_BIND_IP);
+	sock_addr.sin_port = htons(DaemonConfiguration::GetInstance().HttpBindPort);
+	if (!inet_aton(DaemonConfiguration::GetInstance().HttpBindAddr.c_str(), &sock_addr.sin_addr)) {
+		OutputLog("Error: Invalid IP address.", DaemonConfiguration::GetInstance().HttpBindAddr.c_str());
 		return false;
 	}
 	// printf("listen %s:%d\n", HTTP_BIND_IP, HTTP_BIND_PORT);
 
-	handle = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, HTTP_BIND_PORT,
+	handle = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, DaemonConfiguration::GetInstance().HttpBindPort,
 	                          &on_client_connect, NULL, &server_handler, NULL, MHD_OPTION_NOTIFY_COMPLETED,
 	                          request_completed, NULL, MHD_OPTION_SOCK_ADDR, &sock_addr, MHD_OPTION_END);
 	if (handle == NULL) {

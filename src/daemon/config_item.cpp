@@ -17,15 +17,31 @@ typedef INI<string, string, string> SimpleIni;
 DaemonConfiguration::DaemonConfiguration():
 		Languages(std::vector<ProgrammingLanguage>()) {}
 
-DaemonConfiguration::~DaemonConfiguration() {}
+bool DaemonConfiguration::IsLanguageExists(int languageId) {
+	for (ProgrammingLanguage &pl : Languages) {
+		if (pl.LanguageId == languageId)
+			return true;
+	}
+	return false;
+}
+
+ProgrammingLanguage *DaemonConfiguration::FindLanguage(int languageId) {
+	for (ProgrammingLanguage &pl : Languages) {
+		if (pl.LanguageId == languageId)
+			return &pl;
+	}
+	return nullptr;
+}
 
 bool DaemonConfiguration::ReadConfiguration(std::string configFilePath) {
 	if (exists(configFilePath + INI_EXT)) {
+		OutputLog("Ini file " + configFilePath + INI_EXT + "has been found with first priority. CWOJ will parse it as system configuration.");
 		return ParseIni(configFilePath + INI_EXT);
 	} else if (exists(configFilePath + YAML_EXT)) {
+		OutputLog("Yaml file " + configFilePath + YAML_EXT + "has been found with second priority. CWOJ will parse it as system configuration.");
 		return ParseYaml(configFilePath + YAML_EXT);
 	} else {
-		OutputLog("Error: No configuration file found from given path.");
+		OutputLog("Error: No valid configuration file found from given path.");
 		return false;
 	}
 }
@@ -119,6 +135,7 @@ bool DaemonConfiguration::ParseIni(std::string path) {
 }
 
 DaemonConfiguration DaemonConfiguration::GetInstance() {
+	static DaemonConfiguration *SingletonInstance;
 	if (SingletonInstance == nullptr) {
 		SingletonInstance = new DaemonConfiguration;
 	}
