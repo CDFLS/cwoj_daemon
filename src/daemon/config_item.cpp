@@ -131,13 +131,6 @@ bool DaemonConfiguration::ParseIni(std::string path) {
 		Languages.push_back(pl);
 	}
 
-	// FIXME Test code start
-	OutputLog("DBHost = " + DBHost);
-	OutputLog("DBUser = " + DBUser);
-	OutputLog("DBPass = " + DBPass);
-	OutputLog("DBName = " + DBName);
-	// FIXME Test code end
-
 	return true;
 }
 

@@ -28,6 +28,14 @@ bool InitMySQLConnection() throw() {
 	hMySQL = mysql_init(NULL);
 	if (!hMySQL)
 		return false;
+
+	// FIXME Test code start
+	OutputLog("MySQL DBHost = " + DaemonConfiguration::GetInstance().DBHost);
+	OutputLog("MySQL DBUser = " + DaemonConfiguration::GetInstance().DBUser);
+	OutputLog("MySQL DBPass = " + DaemonConfiguration::GetInstance().DBPass);
+	OutputLog("MySQL DBName = " + DaemonConfiguration::GetInstance().DBName);
+	// FIXME Test code end
+
 	hMySQL = mysql_real_connect(
 			hMySQL,
 			DaemonConfiguration::GetInstance().DBHost.c_str(),
