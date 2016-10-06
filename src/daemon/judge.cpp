@@ -125,12 +125,14 @@ bool solution::Compile() throw(const char *) {
 		} else {
 			LastState = buffer;
 			SolutionScore = TimeLimit = MemoryLimit = 0;
-			ErrorCode = SOLUTION_COMPARISON_ERROR;
+			ErrorCode = SOLUTION_COMPILATION_ERROR;
 			puts("Compile Error");
 			delete[] buffer;
 
+			OutputLog("LastState = " + LastState);
+
 			std::unique_lock<std::mutex> Lock(*(std::mutex *) QueryMutex);
-			TestCaseDetail.push_back({SOLUTION_COMPARISON_ERROR, 0, 0, LastState, 0});
+			TestCaseDetail.push_back({SOLUTION_COMPILATION_ERROR, 0, 0, LastState, 0});
 
 			return false;
 		}

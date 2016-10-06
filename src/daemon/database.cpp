@@ -150,7 +150,7 @@ void write_result_to_database(int solution_id, solution *data) throw(const char 
 		delta = data->SolutionScore - delta;
 	else
 		delta = 0;
-	if (data->ErrorCode == SOLUTION_COMPARISON_ERROR) {
+	if (data->ErrorCode == SOLUTION_COMPILATION_ERROR) {
 		puts("insert compileinfo");
 		int len = data->LastState.length();
 		char *info_escape = (char *) malloc(len * 2 + 3);
