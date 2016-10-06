@@ -72,11 +72,11 @@ void solution::CloneFrom(const solution &from) throw() {
 
 bool solution::Compile() throw(const char *) {
 	puts("compile");
-	if (!DaemonConfiguration::GetInstance().IsLanguageExists(LanguageType)) {
+	if (!SystemConf.IsLanguageExists(LanguageType)) {
 		throw "Language doesn't exist";
 	}
 	std::string filename("target.");
-	filename += DaemonConfiguration::GetInstance().IsLanguageExists(LanguageType);
+	filename += SystemConf.IsLanguageExists(LanguageType);
 
 	FILE *code_file = fopen(filename.c_str(), "wb");
 	if (code_file == NULL) {
@@ -94,7 +94,7 @@ bool solution::Compile() throw(const char *) {
 		throw "Can not run compiler";
 	}
 #else
-	std::string command(DaemonConfiguration::GetInstance().FindLanguage(LanguageType)->CompilationExec);
+	std::string command(SystemConf.FindLanguage(LanguageType)->CompilationExec);
 	command += ' ' + filename + " >err.out 2>&1 && echo @~good~@ >err.out";
 	//puts(command.c_str());
 	system(command.c_str());
@@ -173,7 +173,7 @@ void solution::Judge() throw(const char *) {
 	char buffer[MAXPATHLEN * 2 + 16];
 	puts("judge");
 
-	sprintf(dir_name, "%s/%d", DaemonConfiguration::GetInstance().DataDir.c_str(), ProblemFK);
+	sprintf(dir_name, "%s/%d", SystemConf.DataDir.c_str(), ProblemFK);
 	DIR *dp = opendir(dir_name);
 	if (dp == NULL) {
 		ErrorCode = SOLUTION_SYSTEM_ERROR;
@@ -215,8 +215,8 @@ void solution::Judge() throw(const char *) {
 		ansFile = inputFile;
 		ansFile.replace_extension("out");
 
-		if (DaemonConfiguration::GetInstance().TempDir.size() > 0) {
-			path temp_directory(DaemonConfiguration::GetInstance().TempDir);
+		if (SystemConf.TempDir.size() > 0) {
+			path temp_directory(SystemConf.TempDir);
 
 			try {
 				tempFile = temp_directory / d_name;
@@ -241,7 +241,7 @@ void solution::Judge() throw(const char *) {
 		int get_score = case_score;
 
 		if (run_judge(TargetPath, inputFile.string().c_str(), outputFile.string().c_str(), TimeLimit,
-		              (DaemonConfiguration::GetInstance().FindLanguage(LanguageType)->ExtraMemory + MemoryLimit) << 10 /*to byte*/, &result)) {
+		              (SystemConf.FindLanguage(LanguageType)->ExtraMemory + MemoryLimit) << 10 /*to byte*/, &result)) {
 			ErrorCode = SOLUTION_SYSTEM_ERROR;
 			LastState = "Cannot run target program";
 			throw "Cannot run target program";

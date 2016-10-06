@@ -6,7 +6,7 @@
 using std::string;
 
 bool ReadConfigurationFile() {
-	if (DaemonConfiguration::GetInstance().ReadConfiguration()) {
+	if (SystemConf.ReadConfiguration()) {
 		OutputLog("System configuration file parsed successfully.");
 		return true;
 	} else {

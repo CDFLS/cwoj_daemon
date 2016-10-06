@@ -38,22 +38,23 @@ public:
 	u_int16_t HttpBindPort;
 	std::vector<ProgrammingLanguage> Languages;
 
+	DaemonConfiguration();
+
 	bool ReadConfiguration(std::string = std::string(CONFIG_FILE_NO_EXT));
 
 	bool IsLanguageExists(int languageId);
 
 	ProgrammingLanguage *FindLanguage(int languageId);
 
-	static DaemonConfiguration GetInstance();
+//	static DaemonConfiguration GetInstance();
 
 private:
-	DaemonConfiguration();
 
 	bool ParseIni(std::string);
 
 	bool ParseYaml(std::string);
 };
 
-extern DaemonConfiguration *SystemConf;
+extern DaemonConfiguration SystemConf;
 
 #endif

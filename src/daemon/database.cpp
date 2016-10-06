@@ -30,18 +30,18 @@ bool InitMySQLConnection() throw() {
 		return false;
 
 	// FIXME Test code start
-	OutputLog("MySQL DBHost = " + DaemonConfiguration::GetInstance().DBHost);
-	OutputLog("MySQL DBUser = " + DaemonConfiguration::GetInstance().DBUser);
-	OutputLog("MySQL DBPass = " + DaemonConfiguration::GetInstance().DBPass);
-	OutputLog("MySQL DBName = " + DaemonConfiguration::GetInstance().DBName);
+	OutputLog("MySQL DBHost = " + SystemConf.DBHost);
+	OutputLog("MySQL DBUser = " + SystemConf.DBUser);
+	OutputLog("MySQL DBPass = " + SystemConf.DBPass);
+	OutputLog("MySQL DBName = " + SystemConf.DBName);
 	// FIXME Test code end
 
 	hMySQL = mysql_real_connect(
 			hMySQL,
-			DaemonConfiguration::GetInstance().DBHost.c_str(),
-			DaemonConfiguration::GetInstance().DBUser.c_str(),
-			DaemonConfiguration::GetInstance().DBPass.c_str(),
-			DaemonConfiguration::GetInstance().DBName.c_str(),
+			SystemConf.DBHost.c_str(),
+			SystemConf.DBUser.c_str(),
+			SystemConf.DBPass.c_str(),
+			SystemConf.DBName.c_str(),
 			0,
 			NULL,
 			0
