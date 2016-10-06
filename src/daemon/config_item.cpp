@@ -71,7 +71,7 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
 		pl.ExtraMemory = node["ExtraMemory"].as<uint64_t>();
 		pl.CompilationExec = node["CompilationExec"].as<string>();
 	}
-	return false;
+	return true;
 }
 
 bool DaemonConfiguration::ParseIni(std::string path) {
@@ -131,7 +131,7 @@ bool DaemonConfiguration::ParseIni(std::string path) {
 		Languages.push_back(pl);
 	}
 
-	return false;
+	return true;
 }
 
 DaemonConfiguration DaemonConfiguration::GetInstance() {
