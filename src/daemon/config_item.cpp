@@ -37,11 +37,11 @@ ProgrammingLanguage *DaemonConfiguration::FindLanguage(int languageId) {
 
 bool DaemonConfiguration::ReadConfiguration(std::string configFilePath) {
 	if (exists(configFilePath + YAML_EXT)) {
-		OutputLog("Ini file " + configFilePath + YAML_EXT + "has been found with first priority. CWOJ will parse it as system configuration.");
-		return ParseIni(configFilePath + YAML_EXT);
+		OutputLog("YAML file " + configFilePath + YAML_EXT + " has been found with first priority. CWOJ will parse it as system configuration.");
+		return ParseYaml(configFilePath + YAML_EXT);
 	} else if (exists(configFilePath + INI_EXT)) {
-		OutputLog("Yaml file " + configFilePath + INI_EXT + "has been found with second priority. CWOJ will parse it as system configuration.");
-		return ParseYaml(configFilePath + INI_EXT);
+		OutputLog("INI file " + configFilePath + INI_EXT + " has been found with second priority. CWOJ will parse it as system configuration.");
+		return ParseIni(configFilePath + INI_EXT);
 	} else {
 		OutputLog("Error: No valid configuration file found from given path.");
 		return false;
