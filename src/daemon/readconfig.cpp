@@ -45,26 +45,34 @@ bool ReadConfigurationFile() {
 		return false;
 	}
 	strncpy(DataDir, tmp.c_str(), MAXPATHLEN);
+	SystemConf.DataDir = string(tmp);
 
 	tmp = ini.Get(std::string("DATABASE_HOST"), std::string("localhost"));
 	strncpy(DATABASE_HOST, tmp.c_str(), 62);
+	SystemConf.DBHost = string(tmp);
 
 	tmp = ini.Get(std::string("DATABASE_USER"), std::string("root"));
 	strncpy(DATABASE_USER, tmp.c_str(), 120);
+	SystemConf.DBUser = string(tmp);
 
 	tmp = ini.Get(std::string("DATABASE_PASS"), std::string(""));
 	strncpy(DATABASE_PASS, tmp.c_str(), 120);
+	SystemConf.DBPass = string(tmp);
 
 	tmp = ini.Get(std::string("DATABASE_NAME"), std::string("cwoj"));
 	strncpy(DATABASE_NAME, tmp.c_str(), 120);
+	SystemConf.DBName = string(tmp);
 
 	tmp = ini.Get(std::string("HTTP_BIND_IP"), std::string("0.0.0.0"));
 	strncpy(HTTP_BIND_IP, tmp.c_str(), 30);
+	SystemConf.HttpBindAddr = string(tmp);
 
 	tmp = ini.Get(std::string("TempDir"), std::string(""));
 	strncpy(TempDir, tmp.c_str(), sizeof(TempDir));
+	SystemConf.TempDir = string(tmp);
 
 	HTTP_BIND_PORT = ini.Get<const char *, unsigned short>("HTTP_BIND_PORT", 8881u);
+	SystemConf.HttpBindPort = HTTP_BIND_PORT;
 
 	for (auto i = ini.sections.begin(); i != ini.sections.end(); ++i) {
 		const string &lang = i->first;
@@ -93,7 +101,14 @@ bool ReadConfigurationFile() {
 			return false;
 
 		lang_exist[num] = true;
+
+		ProgrammingLanguage pl;
+		pl.LanguageId = num;
+		pl.CompilationExec = lang_compiler[num];
+		pl.ExtraMemory = lang_extra_mem[num];
+		pl.FileExtension = lang_ext[num];
 	}
+
 	/*
 	for(int i = 0; i < MAXLANG; i++) {
 		if(lang_exist[i]) {
