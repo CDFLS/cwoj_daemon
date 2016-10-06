@@ -1,27 +1,25 @@
-System:
-  DataDir: /home/username/data
-  TempDir: /mnt/cwoj_tmp
-  DatabaseHost: localhost
-  DatabaseUser: YOUR_USERNAME
-  DatabasePass: YOUR_PASSWORD
-  DatabaseName: cwoj
+system:
+  data_dir: /home/username/data
+  temp_dir: /mnt/cwoj_tmp
+  db_host: localhost
+  db_user: YOUR_USERNAME
+  db_pass: YOUR_PASSWORD
+  db_name: cwoj
 
-Language1:
-  FileExtension: cpp
-  ExtraMemory: 20480
-  CompilationExec: g++ -static -std=c++03 -fno-asm -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe
-
-Language2:
-  FileExtension: c
-  ExtraMemory: 20480
-  CompilationExec: gcc -static -std=c99 -fno-asm -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe
-
-Language3:
-  FileExtension: pas
-  ExtraMemory: 20480
-  CompilationExec: fpc -Xs -Sgic -O2 -dONLINE_JUDGE -otarget.exe
-
-Language4:
-  FileExtension: cpp
-  ExtraMemory: 20480
-  CompilationExec: g++ -static -std=c++11 -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe
+languages:
+  - id: 1
+    file_extension: cpp
+    extra_memory: 20480
+    compilation_exec: g++ -static -std=c++03 -fno-asm -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe
+  - id: 2
+    file_extension: c
+    extra_memory: 20480
+    compilation_exec: gcc -static -std=c99 -fno-asm -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe
+  - id: 3
+    file_extension: pas
+    extra_memory: 20480
+    compilation_exec: fpc -Xs -Sgic -O2 -dONLINE_JUDGE -otarget.exe
+  - id: 4
+    file_extension: cpp
+    extra_memory: 20480
+    compilation_exec: g++ -static -std=c++11 -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe

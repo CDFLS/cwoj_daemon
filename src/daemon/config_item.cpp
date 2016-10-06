@@ -36,12 +36,12 @@ ProgrammingLanguage *DaemonConfiguration::FindLanguage(int languageId) {
 }
 
 bool DaemonConfiguration::ReadConfiguration(std::string configFilePath) {
-	if (exists(configFilePath + INI_EXT)) {
-		OutputLog("Ini file " + configFilePath + INI_EXT + "has been found with first priority. CWOJ will parse it as system configuration.");
-		return ParseIni(configFilePath + INI_EXT);
-	} else if (exists(configFilePath + YAML_EXT)) {
-		OutputLog("Yaml file " + configFilePath + YAML_EXT + "has been found with second priority. CWOJ will parse it as system configuration.");
-		return ParseYaml(configFilePath + YAML_EXT);
+	if (exists(configFilePath + YAML_EXT)) {
+		OutputLog("Ini file " + configFilePath + YAML_EXT + "has been found with first priority. CWOJ will parse it as system configuration.");
+		return ParseIni(configFilePath + YAML_EXT);
+	} else if (exists(configFilePath + INI_EXT)) {
+		OutputLog("Yaml file " + configFilePath + INI_EXT + "has been found with second priority. CWOJ will parse it as system configuration.");
+		return ParseYaml(configFilePath + INI_EXT);
 	} else {
 		OutputLog("Error: No valid configuration file found from given path.");
 		return false;
@@ -50,28 +50,19 @@ bool DaemonConfiguration::ReadConfiguration(std::string configFilePath) {
 
 bool DaemonConfiguration::ParseYaml(std::string path) {
 	YAML::Node rootNode = YAML::LoadFile(path);
-	DataDir = rootNode["System"]["DataDir"].as<string>();
-	TempDir = rootNode["System"]["TempDir"].as<string>();
-	DBHost = rootNode["System"]["DatabaseHost"].as<string>();
-	DBUser = rootNode["System"]["DatabaseUser"].as<string>();
-	DBPass = rootNode["System"]["DatabasePass"].as<string>();
-	DBName = rootNode["System"]["DatabaseName"].as<string>();
-	for (const auto &node : rootNode) {
-		if (node.Tag() == "System") continue;
-		if (node.Tag().find("Language") == string::npos) continue;
+	DataDir = rootNode["system"]["data_dir"].as<string>();
+	TempDir = rootNode["system"]["temp_dir"].as<string>();
+	DBHost = rootNode["system"]["db_host"].as<string>();
+	DBUser = rootNode["system"]["db_user"].as<string>();
+	DBPass = rootNode["system"]["db_pass"].as<string>();
+	DBName = rootNode["system"]["db_name"].as<string>();
+	for (const YAML::Node &node : rootNode["languages"]) {
 		ProgrammingLanguage pl;
-		string tag = node.Tag();
-		string::size_type firstDigit = string::npos;
-		for (string::size_type cp = tag.size() - 1; cp >= 0; cp--) {
-			if (!isdigit(tag[cp])) {
-				firstDigit = cp + 1;
-				break;
-			}
-		}
-		pl.LanguageId = atoi(tag.substr(firstDigit).c_str());
-		pl.FileExtension = node["FileExtension"].as<string>();
-		pl.ExtraMemory = node["ExtraMemory"].as<uint64_t>();
-		pl.CompilationExec = node["CompilationExec"].as<string>();
+		pl.LanguageId = node["id"].as<int>();
+		pl.FileExtension = node["file_extension"].as<string>();
+		pl.ExtraMemory = node["extra_memory"].as<uint64_t>();
+		pl.CompilationExec = node["compilation_exec"].as<string>();
+		SystemConf.Languages.push_back(pl);
 	}
 	return true;
 }
