@@ -37,6 +37,7 @@ namespace std {
 #endif
 
 #include "judge_daemon.h"
+#include "conf_items.h"
 
 static std::map<std::string, solution *> finder;
 static std::queue<solution *> waiting, removing;
@@ -53,10 +54,10 @@ run_compiler_def run_compiler;
 run_judge_def run_judge;
 #endif
 
-static char target_path[MAXPATHLEN + 16];
+static char TargetPath[MAXPATHLEN + 16];
 
 const char *getTargetPath() {
-	return target_path;
+	return TargetPath;
 }
 
 void OutputLog(const char *str, const char *info) throw() {
@@ -334,19 +335,21 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 #else
-	int size = readlink("/proc/self/exe", target_path, MAXPATHLEN);
-	if (size <= 0) {
-		OutputLog("Error: Cannot get program directory, Exit...");
-		exit(1);
-	}
-	target_path[size] = '\0';
-	for (int i = size - 1; i >= 0; i--)
-		if (target_path[i] == '/') {
-			target_path[i + 1] = '\0';
-			break;
-		}
-	printf("entering %s\n", target_path);
-	if (0 != chdir(target_path)) {
+//	int size = readlink("/proc/self/exe", TargetPath, MAXPATHLEN);
+//	if (size <= 0) {
+//		OutputLog("Error: Cannot get program directory, Exit...");
+//		exit(1);
+//	}
+	int size =SystemConf.TempDir.size();
+	TargetPath = SystemConf.TempDir.c_str();
+//	TargetPath[size] = '\0';
+//	for (int i = size - 1; i >= 0; i--)
+//		if (TargetPath[i] == '/') {
+//			TargetPath[i + 1] = '\0';
+//			break;
+//		}
+	printf("entering %s\n", TargetPath);
+	if (0 != chdir(TargetPath)) {
 		OutputLog("Error: Cannot enter program directory, Exit...");
 		exit(1);
 	}
@@ -373,12 +376,12 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 #ifndef __MINGW32__ //used when run program on *nix only
-	if (NULL == getcwd(target_path, MAXPATHLEN)) {
+	if (NULL == getcwd(TargetPath, MAXPATHLEN)) {
 		OutputLog("Error: Cannot get working directory, Exit...");
 		exit(1);
 	}
-	strcat(target_path, "/target.exe");
-	printf("target: %s\n", target_path);
+	strcat(TargetPath, "/target.exe");
+	printf("target: %s\n", TargetPath);
 #else
 	strcpy(target_path,"target.exe");
 #endif
