@@ -66,6 +66,8 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
 		pl.CompilationExec = node["compilation_exec"].as<string>();
 		SystemConf.Languages.push_back(pl);
 	}
+	OutputLog("Ip Address = " + HttpBindAddr);
+	OutputLog("Port = " + HttpBindPort);
 	return true;
 }
 
