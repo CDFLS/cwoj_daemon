@@ -1,7 +1,7 @@
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Threads)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
-find_package(Yaml-cpp)
+find_package(yaml-cpp)
 
 aux_source_directory(. DAEMON_SOURCE_FILES)
 add_executable(cwoj_daemon_daemon ${DAEMON_SOURCE_FILES})
