@@ -60,7 +60,7 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
 	HttpBindPort = rootNode["system"]["http_bind_port"].as<u_int16_t>();
 	for (const YAML::Node &node : rootNode["languages"]) {
 		ProgrammingLanguage pl;
-		pl.LanguageId = node["id"].as<int>();
+		pl.LanguageId = node["id"].as<int>() - 1;
 		pl.FileExtension = node["file_extension"].as<string>();
 		pl.ExtraMemory = node["extra_memory"].as<uint64_t>();
 		pl.CompilationExec = node["compilation_exec"].as<string>();
