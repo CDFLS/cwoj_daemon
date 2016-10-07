@@ -320,7 +320,7 @@ int main(int argc, char **argv) {
 	//FIXME Here's the test code
 	char *temp = new char[MAXPATHLEN];
 	readlink("/proc/self/exe", temp, MAXPATHLEN);
-	printf("Current work directory: %s", temp);
+	OutputLog("Current work directory: " + std::string(temp));
 	// Test code end
 
 	//enter program directory to read ini files
