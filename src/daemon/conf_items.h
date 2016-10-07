@@ -5,6 +5,7 @@
 #define INI_EXT ".ini"
 #define YAML_EXT ".yaml"
 #define MAXLANG 100
+#define DEFAULT_RUC "../cwoj_daemon_runner "
 
 #include <string>
 #include <vector>
@@ -34,7 +35,7 @@ public:
 
 class DaemonConfiguration {
 public:
-	std::string DBHost, DBUser, DBPass, DBName, HttpBindAddr, DataDir, TempDir;
+	std::string DBHost, DBUser, DBPass, DBName, HttpBindAddr, DataDir, TempDir, RucPath;
 	u_int16_t HttpBindPort;
 	std::vector<ProgrammingLanguage> Languages;
 

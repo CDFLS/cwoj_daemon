@@ -1,8 +1,7 @@
 #include <sstream>
 #include <cstring>
+#include "conf_items.h"
 #include "judge_daemon.h"
-
-#define RUC_NAME "../cwoj_daemon_runner "
 
 #define SPJ_MAX_TIME 5000
 #define SPJ_MAX_MEM 1073741824
@@ -12,7 +11,7 @@
 int run_judge(const char *target, const char *input, const char *output, int time, int mem, ExecutionInfo *info) {
 	std::ostringstream command;
 	static char info_str[128];
-	command << RUC_NAME << target << ' ' << time
+	command << SystemConf.RucPath << target << ' ' << time
 	        << ' ' << mem << " \"" << input << "\" \"" << output << "\"";
 	const std::string &str = command.str();
 	OutputLog(str.c_str());
@@ -71,7 +70,7 @@ ValidatorInfo run_spj(char *datafile_out, char *datafile_in, int *score, char *d
 		return info;
 	}
 	cmd.str("");
-	cmd << RUC_NAME << "./spj.exe " << SPJ_MAX_TIME << ' ' << SPJ_MAX_MEM << " '' '' -spj " << *score << " std.ans";
+	cmd << SystemConf.RucPath << "./spj.exe " << SPJ_MAX_TIME << ' ' << SPJ_MAX_MEM << " '' '' -spj " << *score << " std.ans";
 #endif
 
 	int ret = system(cmd.str().c_str());

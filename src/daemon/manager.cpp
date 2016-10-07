@@ -316,6 +316,13 @@ char *JUDGE_accept_submit(solution *&new_sol) {
 //TODO: watchdog
 int main(int argc, char **argv) {
 	printf("CWOJ Judging Service ver %.2f started.\n", build_version);
+
+	//FIXME Here's the test code
+	char *temp = new char[MAXPATHLEN];
+	readlink("/proc/self/exe", temp, MAXPATHLEN);
+	printf("Current work directory: %s", temp);
+	// Test code end
+
 	//enter program directory to read ini files
 	if (!ReadConfigurationFile()) {
 		OutputLog("Error: Cannot read and parse the config.ini, Exit...");
