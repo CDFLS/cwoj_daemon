@@ -5,12 +5,13 @@ translated into C by zyx
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "judge_daemon.h"
 
-struct ValidatorInfo {
-	int Result;
-	char *UserMismatch;
-	char *StandardMismatch;
-};
+//struct ValidatorInfo {
+//	int Result;
+//	char *UserMismatch;
+//	char *StandardMismatch;
+//};
 
 
 #define VAL_FUCKED (-1)

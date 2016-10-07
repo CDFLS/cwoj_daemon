@@ -96,6 +96,8 @@ bool DaemonConfiguration::ParseIni(std::string path) {
 	TempDir = string(tmp);
 	HttpBindPort = ini.Get<const char *, unsigned short>("HTTP_BIND_PORT", 8881u);
 
+	OutputLog("HttpBindAddr = " + HttpBindAddr);
+
 	for (auto i = ini.sections.begin(); i != ini.sections.end(); ++i) {
 		const string &lang = i->first;
 		if (lang.find("lang") != 0)
