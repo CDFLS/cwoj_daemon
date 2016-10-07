@@ -69,7 +69,7 @@ public:
 	std::vector<SingleTestCaseReport> TestCaseDetail;
 	std::mutex *QueryMutex;//use void* to avoid including <mutex>
 	time_t TimeStamp;
-	std::string TargetPath;
+	const char *TargetPath;
 #ifdef DUMP_FOR_DEBUG
 	std::string RawPostData;
 #endif
@@ -87,7 +87,7 @@ typedef int (*run_compiler_def)(const char *, char *, int);
 
 typedef int (*run_judge_def)(const char *, const char *, const char *, int, int, ExecutionInfo *);
 
-const std::string getTargetPath();
+const char *getTargetPath();
 
 void OutputLog(const char *str, const char *info = "") throw();
 

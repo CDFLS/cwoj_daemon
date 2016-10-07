@@ -37,7 +37,6 @@ namespace std {
 #endif
 
 #include "judge_daemon.h"
-#include "conf_items.h"
 
 static std::map<std::string, solution *> finder;
 static std::queue<solution *> waiting, removing;
@@ -54,10 +53,10 @@ run_compiler_def run_compiler;
 run_judge_def run_judge;
 #endif
 
-static std::string TargetPath;
+static char target_path[MAXPATHLEN + 16];
 
-const std::string getTargetPath() {
-	return TargetPath;
+const char *getTargetPath() {
+	return target_path;
 }
 
 void OutputLog(const char *str, const char *info) throw() {
@@ -319,39 +318,35 @@ int main(int argc, char **argv) {
 	//enter program directory to read ini files
 #if defined(_WIN32) || defined(__linux__)
 #ifdef _WIN32
-	int size = GetModuleFileNameA(NULL, TargetPath, MAXPATHLEN);
+	int size = GetModuleFileNameA(NULL, target_path, MAXPATHLEN);
 	if(size <= 0) {
 		applog("Error: Cannot get program directory, Exit...");
 		exit(1);
 	}
 	for(int i=size-1; i>=0; i--)
-		if(TargetPath[i] == '\\') {
-			TargetPath[i+1] = '\0';
+		if(target_path[i] == '\\') {
+			target_path[i+1] = '\0';
 			break;
 		}
-	printf("entering %s\n", TargetPath);
-	if(!SetCurrentDirectory(TargetPath)) {
+	printf("entering %s\n", target_path);
+	if(!SetCurrentDirectory(target_path)) {
 		applog("Error: Cannot enter program directory, Exit...");
 		exit(1);
 	}
 #else
-//	int size = readlink("/proc/self/exe", TargetPath, MAXPATHLEN);
-	// Yoto: /proc/self/exe is current working directory
-	int size = (int) SystemConf.TempDir.size();
-	TargetPath = SystemConf.TempDir.c_str();
-
+	int size = readlink("/proc/self/exe", target_path, MAXPATHLEN);
 	if (size <= 0) {
 		OutputLog("Error: Cannot get program directory, Exit...");
 		exit(1);
 	}
-	TargetPath[size] = '\0';
+	target_path[size] = '\0';
 	for (int i = size - 1; i >= 0; i--)
-		if (TargetPath[i] == '/') {
-			TargetPath[i + 1] = '\0';
+		if (target_path[i] == '/') {
+			target_path[i + 1] = '\0';
 			break;
 		}
-	printf("entering %s\n", TargetPath.c_str());
-	if (0 != chdir(TargetPath.c_str())) {
+	printf("entering %s\n", target_path);
+	if (0 != chdir(target_path)) {
 		OutputLog("Error: Cannot enter program directory, Exit...");
 		exit(1);
 	}
@@ -378,15 +373,14 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 #ifndef __MINGW32__ //used when run program on *nix only
-//	if (NULL == getcwd(TargetPath.c_str(), MAXPATHLEN)) {
-//		OutputLog("Error: Cannot get working directory, Exit...");
-//		exit(1);
-//	}
-//	strcat(TargetPath, "/target.exe");
-	TargetPath += "/target.exe";
-	printf("target: %s\n", TargetPath.c_str());
+	if (NULL == getcwd(target_path, MAXPATHLEN)) {
+		OutputLog("Error: Cannot get working directory, Exit...");
+		exit(1);
+	}
+	strcat(target_path, "/target.exe");
+	printf("target: %s\n", target_path);
 #else
-	strcpy(TargetPath,"target.exe");
+	strcpy(target_path,"target.exe");
 #endif
 
 	std::thread thread_j(thread_judge);

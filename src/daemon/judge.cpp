@@ -243,7 +243,7 @@ void solution::Judge() throw(const char *) {
 		ExecutionInfo result;
 		int get_score = case_score;
 
-		if (run_judge(TargetPath.c_str(), inputFile.string().c_str(), outputFile.string().c_str(), TimeLimit,
+		if (run_judge(TargetPath, inputFile.string().c_str(), outputFile.string().c_str(), TimeLimit,
 		              (SystemConf.FindLanguage(LanguageType)->ExtraMemory + MemoryLimit) << 10 /*to byte*/, &result)) {
 			ErrorCode = SOLUTION_SYSTEM_ERROR;
 			LastState = "Cannot run target program";
