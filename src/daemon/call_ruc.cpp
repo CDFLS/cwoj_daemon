@@ -11,7 +11,7 @@
 int run_judge(const char *target, const char *input, const char *output, int time, int mem, ExecutionInfo *info) {
 	std::ostringstream command;
 	static char info_str[128];
-	command << SystemConf.RucPath << target << ' ' << time
+	command << SystemConf.RucPath << ' ' << target << ' ' << time
 	        << ' ' << mem << " \"" << input << "\" \"" << output << "\"";
 	const std::string &str = command.str();
 	OutputLog(str.c_str());
@@ -70,7 +70,7 @@ ValidatorInfo run_spj(char *datafile_out, char *datafile_in, int *score, char *d
 		return info;
 	}
 	cmd.str("");
-	cmd << SystemConf.RucPath << "./spj.exe " << SPJ_MAX_TIME << ' ' << SPJ_MAX_MEM << " '' '' -spj " << *score << " std.ans";
+	cmd << SystemConf.RucPath << ' ' << "./spj.exe " << SPJ_MAX_TIME << ' ' << SPJ_MAX_MEM << " '' '' -spj " << *score << " std.ans";
 #endif
 
 	int ret = system(cmd.str().c_str());
