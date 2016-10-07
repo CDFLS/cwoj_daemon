@@ -56,6 +56,8 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
 	DBUser = rootNode["system"]["db_user"].as<string>();
 	DBPass = rootNode["system"]["db_pass"].as<string>();
 	DBName = rootNode["system"]["db_name"].as<string>();
+	HttpBindAddr = rootNode["system"]["http_bind_addr"].as<string>();
+	HttpBindPort = rootNode["system"]["http_bind_port"].as<u_int16_t>();
 	for (const YAML::Node &node : rootNode["languages"]) {
 		ProgrammingLanguage pl;
 		pl.LanguageId = node["id"].as<int>();
@@ -95,8 +97,6 @@ bool DaemonConfiguration::ParseIni(std::string path) {
 	tmp = ini.Get(std::string("TempDir"), std::string(""));
 	TempDir = string(tmp);
 	HttpBindPort = ini.Get<const char *, unsigned short>("HTTP_BIND_PORT", 8881u);
-
-	OutputLog("HttpBindAddr = " + HttpBindAddr);
 
 	for (auto i = ini.sections.begin(); i != ini.sections.end(); ++i) {
 		const string &lang = i->first;

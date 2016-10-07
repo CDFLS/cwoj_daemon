@@ -5,6 +5,8 @@ system:
   db_user: YOUR_USERNAME
   db_pass: YOUR_PASSWORD
   db_name: cwoj
+  http_bind_addr: 0.0.0.0
+  http_bind_port: 8881
 
 languages:
   - id: 1
