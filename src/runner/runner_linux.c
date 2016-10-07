@@ -12,7 +12,7 @@ static const int sc_safe[] = {
 #else
 		3,    4,      6,    108,   19,    90,    125,     91,    45,   174,         54,    145,   146,   33,      163,   122,      85,      76,        43,              13,    252,         140,    192,    197,    224,     243
 #endif
-//read, write, close, fstat, lseek, mmap, mprotect, munmap, brk, rt_sigaction, ioctl, readv, writev, access, mremap, uname, readlink, getrlimit, times, arch_prctl, TimeLimit, exit_group, _llseek, mmap2, fstat64, gettid, set_thread_area
+//read, write, close, fstat, lseek, mmap, mprotect, munmap, brk, rt_sigaction, ioctl, readv, writev, access, mremap, uname, readlink, getrlimit, times, arch_prctl, time, exit_group, _llseek, mmap2, fstat64, gettid, set_thread_area
 };
 
 static void init_safe_syscall() {
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 			state = 0;
 			if (ret.exit_code != 0) {
 				state = 5;
-				ret.info = "Exit UserCode is not zero";
+				ret.info = "Exit code is not zero";
 			}
 			break;
 		case PROF_NOTSET:
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 			printf("spj: %s\n", ret.info);
 		return (state == 0) ? 0 : 10 + state;//whether validator exited successfully
 	}
-	run_info = fopen("run.SingleTestCaseResult", "w");
+	run_info = fopen("run.info", "w");
 	if (!run_info)
 		return 3;
 

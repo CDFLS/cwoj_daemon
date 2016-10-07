@@ -17,11 +17,11 @@ struct validator_info{
 #include <math.h>
 
 
-#define VAL_FUCKED (-1)
-#define VAL_IDENTICAL 0
-#define VAL_MISMATCH 1
-#define VAL_LONGER 2
-#define VAL_SHORTER 3
+//#define VAL_FUCKED (-1)
+//#define VAL_IDENTICAL 0
+//#define VAL_MISMATCH 1
+//#define VAL_LONGER 2
+//#define VAL_SHORTER 3
 
 #define BEGIN_OF_FILE -2
 
@@ -52,14 +52,14 @@ void read_around(FILE *stream, char *buf) {
 	*buf = 0;
 }
 
-struct ValidatorResult mismatch(FILE *fstd, FILE *fuser) {
-	struct ValidatorResult ret;
-	ret.ResultCode = VAL_MISMATCH;
+struct ValidatorInfo mismatch(FILE *fstd, FILE *fuser) {
+	struct ValidatorInfo ret;
+	ret.Result = VALIDATOR_MISMATCH;
 	ret.UserMismatch = (char *) malloc(LENGTH_OF_MISMATCH_INFO);
 	ret.StandardMismatch = (char *) malloc(LENGTH_OF_MISMATCH_INFO);
 
 	if (!ret.UserMismatch || !ret.StandardMismatch) {
-		ret.ResultCode = VAL_FUCKED;
+		ret.Result = VALIDATOR_FUCKED;
 		return ret;
 	}
 
@@ -163,13 +163,13 @@ int compare(struct field *fa, struct field *fb) {
 	return 0;
 }
 
-ValidatorResult validator(FILE *fstd, FILE *fuser) {
-	struct ValidatorResult ret;
-	ret.ResultCode = 0;
+ValidatorInfo validator(FILE *fstd, FILE *fuser) {
+	struct ValidatorInfo ret;
+	ret.Result = 0;
 	ret.UserMismatch = ret.StandardMismatch = NULL;
 
 	if (!fstd || !fuser) {
-		ret.ResultCode = VAL_FUCKED;
+		ret.Result = VALIDATOR_FUCKED;
 		return ret;
 	}
 
@@ -177,9 +177,9 @@ ValidatorResult validator(FILE *fstd, FILE *fuser) {
 	int line_u = filelines(fuser);
 	int line_s = filelines(fstd);
 	if (line_u < line_s)
-		ret.ResultCode = VAL_SHORTER;
+		ret.Result = VALIDATOR_SHORTER;
 	else if (line_u > line_s)
-		ret.ResultCode = VAL_LONGER;
+		ret.Result = VALIDATOR_LONGER;
 	if (line_u != line_s)
 		return ret;
 
@@ -196,15 +196,15 @@ ValidatorResult validator(FILE *fstd, FILE *fuser) {
 		fu.st = fu.ed + 1;
 		find_end(&fu);
 	}
-	ret.ResultCode = VAL_IDENTICAL;
+	ret.Result = VALIDATOR_IDENTICAL;
 	return ret;
 }
 
-struct ValidatorResult validator_int(FILE *fstd, FILE *fuser) {
-	struct ValidatorResult info;
+struct ValidatorInfo validator_int(FILE *fstd, FILE *fuser) {
+	struct ValidatorInfo info;
 
 	if (!fstd || !fuser) {
-		info.ResultCode = VAL_FUCKED;
+		info.Result = VALIDATOR_FUCKED;
 		return info;
 	}
 
@@ -223,7 +223,7 @@ struct ValidatorResult validator_int(FILE *fstd, FILE *fuser) {
 
 		if (nstd == 1 && nusr == 1) {
 			if (vstd != vusr) {
-				info.ResultCode = VAL_MISMATCH;
+				info.Result = VALIDATOR_MISMATCH;
 				info.UserMismatch = (char *) malloc(25);
 				info.StandardMismatch = (char *) malloc(25);
 
@@ -233,13 +233,13 @@ struct ValidatorResult validator_int(FILE *fstd, FILE *fuser) {
 				break;
 			}
 		} else if (nstd == 1) {
-			info.ResultCode = VAL_SHORTER;
+			info.Result = VALIDATOR_SHORTER;
 			break;
 		} else if (nusr == 1) {
-			info.ResultCode = VAL_LONGER;
+			info.Result = VALIDATOR_LONGER;
 			break;
 		} else {
-			info.ResultCode = VAL_IDENTICAL;
+			info.Result = VALIDATOR_IDENTICAL;
 			break;
 		}
 	}
@@ -251,12 +251,12 @@ const double error_tab[10] =
 		{1, 0.1, 0.01, 0.001, 0.0001, 0.00001,
 		 0.000001, 0.0000001, 0.00000001, 0.000000001};
 
-struct ValidatorResult validator_float(FILE *fstd, FILE *fuser, int prec) {
-	struct ValidatorResult info;
+struct ValidatorInfo validator_float(FILE *fstd, FILE *fuser, int prec) {
+	struct ValidatorInfo info;
 	double error;
 
 	if (!fstd || !fuser || prec < 0 || prec > 9) {
-		info.ResultCode = VAL_FUCKED;
+		info.Result = VALIDATOR_FUCKED;
 		return info;
 	}
 	error = error_tab[prec];
@@ -269,7 +269,7 @@ struct ValidatorResult validator_float(FILE *fstd, FILE *fuser, int prec) {
 
 		if (nstd == 1 && nusr == 1) {
 			if (fabs(vstd - vusr) >= error) {
-				info.ResultCode = VAL_MISMATCH;
+				info.Result = VALIDATOR_MISMATCH;
 				info.UserMismatch = (char *) malloc(64);
 				info.StandardMismatch = (char *) malloc(64);
 
@@ -279,13 +279,13 @@ struct ValidatorResult validator_float(FILE *fstd, FILE *fuser, int prec) {
 				break;
 			}
 		} else if (nstd == 1) {
-			info.ResultCode = VAL_SHORTER;
+			info.Result = VALIDATOR_SHORTER;
 			break;
 		} else if (nusr == 1) {
-			info.ResultCode = VAL_LONGER;
+			info.Result = VALIDATOR_LONGER;
 			break;
 		} else {
-			info.ResultCode = VAL_IDENTICAL;
+			info.Result = VALIDATOR_IDENTICAL;
 			break;
 		}
 	}
@@ -296,7 +296,7 @@ int main()
 {
 	FILE* f1 = fopen("A.txt", "r");
 	FILE* f2 = fopen("B.txt", "r");
-	struct ValidatorResult ret = validator(f1, f2);
+	struct validator_info ret = validator(f1, f2);
 
 	if(ret.ret == VAL_FUCKED)
 		printf("Error\n");
@@ -304,8 +304,8 @@ int main()
 		printf("Identical\n");
 	else if(ret.ret == VAL_MISMATCH){
 		printf("Mismatch\n");
-		printf("UserName output: %s\n", ret.UserMismatch);
-		printf("std output: %s\n", ret.StandardMismatch);
+		printf("user output: %s\n", ret.user_mismatch);
+		printf("std output: %s\n", ret.std_mismatch);
 	}else if(ret.ret == VAL_SHORTER)
 		printf("Shorter\n");
 	else

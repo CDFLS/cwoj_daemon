@@ -1,0 +1,28 @@
+system:
+  data_dir: /home/username/data
+  temp_dir: /mnt/cwoj_tmp
+  db_host: localhost
+  db_user: YOUR_USERNAME
+  db_pass: YOUR_PASSWORD
+  db_name: cwoj
+  http_bind_addr: 0.0.0.0
+  http_bind_port: 8881
+  ruc_path:
+
+languages:
+  - id: 1
+    file_extension: cpp
+    extra_memory: 20480
+    compilation_exec: g++ -static -std=c++03 -fno-asm -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe
+  - id: 2
+    file_extension: c
+    extra_memory: 20480
+    compilation_exec: gcc -static -std=c99 -fno-asm -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe
+  - id: 3
+    file_extension: pas
+    extra_memory: 20480
+    compilation_exec: fpc -Xs -Sgic -O2 -dONLINE_JUDGE -otarget.exe
+  - id: 4
+    file_extension: cpp
+    extra_memory: 20480
+    compilation_exec: g++ -static -std=c++11 -s -Wall -O2 -lm -DONLINE_JUDGE -o target.exe

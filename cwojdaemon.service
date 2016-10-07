@@ -3,7 +3,7 @@ Description=cwoj_daemon
 After=mysql.service
 
 [Service]
-ExecStart=/usr/bin/cwoj_daemon
+ExecStart=/usr/local/bin/cwoj_daemon_daemon
 Type=simple
 Restart=always
 
