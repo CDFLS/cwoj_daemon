@@ -317,6 +317,14 @@ char *JUDGE_accept_submit(solution *&new_sol) {
 int main(int argc, char **argv) {
 	printf("CWOJ Judging Service ver %.2f started.\n", build_version);
 	//enter program directory to read ini files
+	if (!ReadConfigurationFile()) {
+		OutputLog("Error: Cannot read and parse the config.ini, Exit...");
+		exit(1);
+	}
+	if (!InitMySQLConnection()) {
+		OutputLog("Error: Cannot connect to mysql, Exit...");
+		exit(1);
+	}
 #if defined(_WIN32) || defined(__linux__)
 #ifdef _WIN32
 	int size = GetModuleFileNameA(NULL, target_path, MAXPATHLEN);
@@ -361,14 +369,6 @@ int main(int argc, char **argv) {
 	// I don't know
 #endif
 
-	if (!ReadConfigurationFile()) {
-		OutputLog("Error: Cannot read and parse the config.ini, Exit...");
-		exit(1);
-	}
-	if (!InitMySQLConnection()) {
-		OutputLog("Error: Cannot connect to mysql, Exit...");
-		exit(1);
-	}
 #ifdef __MINGW32__
 	mkdir("temp");
 #else
