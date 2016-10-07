@@ -340,8 +340,11 @@ int main(int argc, char **argv) {
 //		OutputLog("Error: Cannot get program directory, Exit...");
 //		exit(1);
 //	}
-	int size =SystemConf.TempDir.size();
-	TargetPath = SystemConf.TempDir.c_str();
+	int size = SystemConf.TempDir.size();
+	strcpy(TargetPath, SystemConf.TempDir.c_str());
+	OutputLog("Test target path");
+	OutputLog(SystemConf.TempDir);
+	OutputLog(TargetPath);
 //	TargetPath[size] = '\0';
 //	for (int i = size - 1; i >= 0; i--)
 //		if (TargetPath[i] == '/') {
