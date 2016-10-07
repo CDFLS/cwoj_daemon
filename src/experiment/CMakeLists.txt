@@ -1,4 +1,4 @@
-find_package(yaml-cpp)
+find_package(YamlCpp)
 
 aux_source_directory(. EXPERIMENT_SOURCE_FILE)
 
