@@ -49,11 +49,6 @@ static solution rejudge_init;
 
 const float build_version = 1.03;
 
-#ifdef USE_DLL_ON_WINDOWS
-run_compiler_def run_compiler;
-run_judge_def run_judge;
-#endif
-
 static char TargetPath[MAXPATHLEN + 16];
 
 const char *getTargetPath() {

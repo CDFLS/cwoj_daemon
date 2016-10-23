@@ -1,7 +1,7 @@
 #ifndef CONF_ITEM_H_
 #define CONF_ITEM_H_
 
-#define CONFIG_FILE_NO_EXT "/etc/cwojconfig"
+#define CONFIG_FILE_NO_EXT "/etc/cwoj_new"
 #define INI_EXT ".ini"
 #define YAML_EXT ".yaml"
 #define MAXLANG 100
@@ -9,6 +9,10 @@
 
 #include <string>
 #include <vector>
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+#include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
+using namespace boost::filesystem;
 
 //Configure variables defined in readconf.cpp
 
@@ -35,7 +39,8 @@ public:
 
 class DaemonConfiguration {
 public:
-	std::string DBHost, DBUser, DBPass, DBName, HttpBindAddr, DataDir, TempDir, RucPath;
+	std::string DBHost, DBUser, DBPass, DBName, HttpBindAddr, DataDir, TempDir, RucPath, UserName;
+        path DataDirectory, TempDirectory;
 	u_int16_t HttpBindPort;
 	std::vector<ProgrammingLanguage> Languages;
 

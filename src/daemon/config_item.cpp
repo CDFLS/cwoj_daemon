@@ -11,7 +11,7 @@
 #include "judge_daemon.h"
 
 using std::string;
-using namespace boost::filesystem;
+using boost::filesystem::path;
 typedef INI<string, string, string> SimpleIni;
 
 DaemonConfiguration SystemConf;
@@ -50,8 +50,13 @@ bool DaemonConfiguration::ReadConfiguration(std::string configFilePath) {
 
 bool DaemonConfiguration::ParseYaml(std::string path) {
 	YAML::Node rootNode = YAML::LoadFile(path);
-	DataDir = rootNode["system"]["data_dir"].as<string>();
-	TempDir = rootNode["system"]["temp_dir"].as<string>();
+
+        TempDirectory = boost::filesystem::path((string)rootNode["system"]["temp_dir"].as<string>());
+        DataDirectory = boost::filesystem::path((string)rootNode["system"]["data_dir"].as<string>());
+	TempDir = TempDirectory.string();
+	DataDir = DataDirectory.string();
+
+	UserName = rootNode["system"]["user_name"].as<string>();
 	DBHost = rootNode["system"]["db_host"].as<string>();
 	DBUser = rootNode["system"]["db_user"].as<string>();
 	DBPass = rootNode["system"]["db_pass"].as<string>();

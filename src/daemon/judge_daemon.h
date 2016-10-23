@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <vector>
 #include <ctime>
@@ -129,8 +130,5 @@ struct ValidatorInfo validator_int(FILE *fstd, FILE *fuser);
 struct ValidatorInfo validator_float(FILE *fstd, FILE *fuser, int);
 }
 
-int run_judge(const char *, const char *, const char *, int, int, ExecutionInfo *);
-
 ValidatorInfo run_spj(char *datafile_out, char *datafile_in, int *score, char *data_dir);
-
 
