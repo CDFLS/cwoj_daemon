@@ -9,8 +9,11 @@
 
 #include <string>
 #include <vector>
+
 #define BOOST_NO_CXX11_SCOPED_ENUMS
+
 #include <boost/filesystem.hpp>
+
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 using namespace boost::filesystem;
 
@@ -32,32 +35,32 @@ using namespace boost::filesystem;
 
 class ProgrammingLanguage {
 public:
-	int LanguageId;
-	std::string FileExtension, CompilationExec;
-	uint64_t ExtraMemory;
+    int LanguageId;
+    std::string FileExtension, CompilationExec;
+    uint64_t ExtraMemory;
 };
 
 class DaemonConfiguration {
 public:
-	std::string DBHost, DBUser, DBPass, DBName, HttpBindAddr, DataDir, TempDir, RucPath, UserName;
-        path DataDirectory, TempDirectory;
-	u_int16_t HttpBindPort;
-	std::vector<ProgrammingLanguage> Languages;
+    std::string DBHost, DBUser, DBPass, DBName, HttpBindAddr, DataDir, TempDir, RucPath, UserName;
+    path DataDirectory, TempDirectory;
+    u_int16_t HttpBindPort;
+    std::vector<ProgrammingLanguage> Languages;
 
-	DaemonConfiguration();
+    DaemonConfiguration();
 
-	bool ReadConfiguration(std::string = std::string(CONFIG_FILE_NO_EXT));
+    bool ReadConfiguration(std::string = std::string(CONFIG_FILE_NO_EXT));
 
-	bool IsLanguageExists(int languageId);
+    bool IsLanguageExists(int languageId);
 
-	ProgrammingLanguage *FindLanguage(int languageId);
+    ProgrammingLanguage *FindLanguage(int languageId);
 
 //	static DaemonConfiguration GetInstance();
 
 private:
-	bool ParseIni(std::string);
+    bool ParseIni(std::string);
 
-	bool ParseYaml(std::string);
+    bool ParseYaml(std::string);
 };
 
 extern DaemonConfiguration SystemConf;

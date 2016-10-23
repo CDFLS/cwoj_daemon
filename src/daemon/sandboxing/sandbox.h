@@ -1,19 +1,19 @@
 #pragma once
+
 #include <string>
 #include <boost/filesystem.hpp>
 
-enum RunStatus
-{
+enum RunStatus {
     // App exited normally.
-    Exited,
+            Exited,
     // App is kill by some signal.
-    Signaled,
+            Signaled,
     // App is killed due to some bad syscalls.
-    BadSyscall,
+            BadSyscall,
     TimeLimitExceeded,
     MemoryLimitExceeded,
     // Exceptions occurred while running child.
-    Failed
+            Failed
 };
 
 struct ExecutionResult {
@@ -23,4 +23,5 @@ struct ExecutionResult {
     int Memory;
 };
 
-ExecutionResult RunSandbox(boost::filesystem::path tempDirectory, std::string targetName, std::string inputFileName, std::string outputFileName, int timeLimit, int memoryLimit);
+ExecutionResult RunSandbox(boost::filesystem::path tempDirectory, std::string targetName, std::string inputFileName,
+                           std::string outputFileName, int timeLimit, int memoryLimit);

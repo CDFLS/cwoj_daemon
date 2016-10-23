@@ -33,9 +33,10 @@ using std::string;
 using boost::filesystem::path;
 using boost::format;
 
-enum LogLevel {Debug, Info, Warning, Error};
-struct RunResult
-{
+enum LogLevel {
+    Debug, Info, Warning, Error
+};
+struct RunResult {
     RunStatus Status;
     // Return code if exited, Signal if signaled, Syscall number if killed by bad syscall.
     int Code;
@@ -45,8 +46,7 @@ struct RunResult
     int Time;
 };
 
-void Log(format message, LogLevel level)
-{
+void Log(format message, LogLevel level) {
     if (level >= Debug)
         std::cerr << message << std::endl;
 }
@@ -57,12 +57,10 @@ const int DefaultErrorCode = 89;
 const int Seccomp_brk = 64;
 
 // Seccomp: restrict syscalls
-void InitalizeSeccomp()
-{
+void InitalizeSeccomp() {
     scmp_filter_ctx ctx;
 
-    try
-    {
+    try {
         Log(format("Child: Setting Seccomp options"), Debug);
         ctx = CheckNull(seccomp_init(SCMP_ACT_TRACE(Seccomp_DisabledSyscall)));
 
@@ -91,66 +89,57 @@ void InitalizeSeccomp()
 
         Ensure_Seccomp(seccomp_load(ctx));
     }
-    catch (runtime_error & rc)
-    {
+    catch (runtime_error &rc) {
         if (ctx != nullptr)
             seccomp_release(ctx);
         throw;
     }
 }
 
-void RedirectIO(const string & input = "", const string & output = "")
-{
-    if (input != "")
-    {
+void RedirectIO(const string &input = "", const string &output = "") {
+    if (input != "") {
         int inputfd = Ensure(open(input.c_str(), O_RDONLY));
         Ensure(dup2(inputfd, STDIN_FILENO));
     }
 
-    if (output != "")
-    {
-        int outputfd = Ensure(open(output.c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP));
+    if (output != "") {
+        int outputfd = Ensure(
+                open(output.c_str(), O_WRONLY | O_TRUNC | O_CREAT, S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP));
         Ensure(dup2(outputfd, STDOUT_FILENO));
     }
 }
 
-void FindAndSetUID(const string & userName)
-{
-    passwd * pw;
+void FindAndSetUID(const string &userName) {
+    passwd *pw;
     pw = CheckNull(getpwnam(userName.c_str()));
     Ensure(setuid(pw->pw_uid));
 }
 
-void SetResourceLimit(int cpu, int mem)
-{
+void SetResourceLimit(int cpu, int mem) {
     rlimit rl;
 
-    if (cpu != -1)
-    {
+    if (cpu != -1) {
         // We can capture SIGXCPU
         rl.rlim_cur = (cpu + 999) / 1000;
         rl.rlim_max = (cpu + 999) / 1000 + 1;
         Ensure(setrlimit(RLIMIT_CPU, &rl));
     }
 
-    if (mem != -1)
-    {
+    if (mem != -1) {
         rl.rlim_cur = rl.rlim_max = mem * 1024 * 2;
         Ensure(setrlimit(RLIMIT_AS, &rl));
     }
 }
 
-bool ChildProcess(const string & appName,
-                  const string & workDir,
+bool ChildProcess(const string &appName,
+                  const string &workDir,
                   int cpuLimit = -1,
                   int memLimit = -1,
-                  const string & input = "",
-                  const string & output = "",
-                  const string & userName = "",
-                  bool doChroot = false)
-{
-    try
-    {
+                  const string &input = "",
+                  const string &output = "",
+                  const string &userName = "",
+                  bool doChroot = false) {
+    try {
         if (doChroot)
             Ensure(chroot(workDir.c_str()));
         else
@@ -167,31 +156,29 @@ bool ChildProcess(const string & appName,
         Ensure0(raise(SIGSTOP));
 
         InitalizeSeccomp();
-        char * margs[] = {nullptr};
+        char *margs[] = {nullptr};
         Log(format("Child: start executing"), Debug);
         Ensure(execvp(("./" + appName).c_str(), margs));
     }
-    catch (std::runtime_error & err)
-    {
+    catch (std::runtime_error &err) {
         Log(format("Child: error: %1%") % err.what(), Error);
     }
 }
 
-RunResult TraceChild(int childpid)
-{
+RunResult TraceChild(int childpid) {
     int status;
     bool codeRun = false;
     RunResult runResult;
-    enum {Running, Kill, SelfExited} childStatus;
+    enum {
+        Running, Kill, SelfExited
+    } childStatus;
 
-    try
-    {
+    try {
         // Waiting for child to execute SIGSTOP
         Log(format("Parent: Waiting for child"), Debug);
         Ensure(waitpid(childpid, &status, 0));
 
-        if (!((WIFSTOPPED(status)) && ((WSTOPSIG(status)) == SIGSTOP)))
-        {
+        if (!((WIFSTOPPED(status)) && ((WSTOPSIG(status)) == SIGSTOP))) {
             throw std::runtime_error("Waiting for child failed: child did not raise SIGSTOP.");
         }
 
@@ -201,8 +188,7 @@ RunResult TraceChild(int childpid)
         childStatus = Running;
         int code = 0;
 
-        while (childStatus == Running)
-        {
+        while (childStatus == Running) {
             // Resume child execution here
             ptrace_e(PTRACE_CONT, childpid, 0, code);
 
@@ -210,50 +196,39 @@ RunResult TraceChild(int childpid)
             Ensure(waitpid(childpid, &status, 0));
             Log(format("Child signal received: %1%") % status, Debug);
 
-            if (WIFSTOPPED(status))
-            {
+            if (WIFSTOPPED(status)) {
                 Log(format("Child stopped. STOPSIG is %1%") % (WSTOPSIG(status)), Debug);
-                if (status >> 8 == (SIGTRAP | (PTRACE_EVENT_SECCOMP << 8)))
-                {
+                if (status >> 8 == (SIGTRAP | (PTRACE_EVENT_SECCOMP << 8))) {
                     unsigned long x;
                     ptrace_e(PTRACE_GETEVENTMSG, childpid, NULL, &x);
                     // If the syscall is not in the whitelist
                     if ((x == Seccomp_DisabledSyscall) ||
-                            // Calling execvp in sandboxed app is also invalid
-                            (codeRun && x == Seccomp_ExecvpSyscall))
-                    {
+                        // Calling execvp in sandboxed app is also invalid
+                        (codeRun && x == Seccomp_ExecvpSyscall)) {
                         int scno = ptrace(PTRACE_PEEKUSER, childpid, ORIG_RAX * 8, NULL);
-                        Log(format("Info: app is calling forbidden syscall `%1%()`, killing") % SyscallToString(scno + 1) , Debug);
+                        Log(format("Info: app is calling forbidden syscall `%1%()`, killing") %
+                            SyscallToString(scno + 1), Debug);
                         childStatus = Kill;
                         runResult.Status = BadSyscall;
                         runResult.Code = scno + 1;
                     }
-                }
-                else if (status >> 8 == (SIGTRAP | (PTRACE_EVENT_EXEC << 8)))
-                {
+                } else if (status >> 8 == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
                     // App starts running.
                     codeRun = true;
-                }
-                else if (WSTOPSIG(status) == SIGXCPU)
-                {
+                } else if (WSTOPSIG(status) == SIGXCPU) {
                     // Time out
                     childStatus = Kill;
                     runResult.Status = TimeLimitExceeded;
-                }
-                else
-                {
-                    Log(format("Unknown signal received: %1%, passing it to child.") % SignalToString(WSTOPSIG(status)), Debug);
+                } else {
+                    Log(format("Unknown signal received: %1%, passing it to child.") % SignalToString(WSTOPSIG(status)),
+                        Debug);
                     code = WSTOPSIG(status);
                 }
-            }
-            else if (WIFEXITED(status))
-            {
+            } else if (WIFEXITED(status)) {
                 Log(format("App exited with code %1%") % WEXITSTATUS(status), Debug);
                 childStatus = SelfExited;
                 runResult.Status = Exited;
-            }
-            else if (WIFSIGNALED(status))
-            {
+            } else if (WIFSIGNALED(status)) {
                 Log(format("App is signally killed, signal is %1%") % SignalToString(WTERMSIG(status)), Debug);
                 childStatus = SelfExited;
                 runResult.Status = Signaled;
@@ -261,15 +236,13 @@ RunResult TraceChild(int childpid)
             }
         }
 
-        if (childStatus == Kill)
-        {
+        if (childStatus == Kill) {
             Ensure(kill(childpid, SIGKILL));
         }
         Log(format("Child dead."), Debug);
 
         // Get resource usage statistics
-        if (runResult.Status == Exited)
-        {
+        if (runResult.Status == Exited) {
             rusage res;
             getrusage(RUSAGE_CHILDREN, &res);
 
@@ -279,8 +252,7 @@ RunResult TraceChild(int childpid)
             runResult.Memory = execMemory;
         }
     }
-    catch (std::runtime_error & err)
-    {
+    catch (std::runtime_error &err) {
         Log(format("Exception occurred: %1%") % err.what(), Error);
         if (childStatus == Running || childStatus == Kill)
             kill(childpid, SIGKILL);
@@ -365,26 +337,24 @@ RunResult TraceChild(int childpid)
 }
 */
 
-ExecutionResult RunSandbox(path tempDirectory, string targetName, string inputFileName, string outputFileName, int timeLimit, int memoryLimit)
-{
+ExecutionResult
+RunSandbox(path tempDirectory, string targetName, string inputFileName, string outputFileName, int timeLimit,
+           int memoryLimit) {
     ExecutionResult exeResult;
 
     int pipefd[2];
     Ensure(pipe(pipefd));
 
     int pid = Ensure(fork());
-    if (pid == 0)
-    {
+    if (pid == 0) {
         Ensure(close(pipefd[0]));
 
         int childpid = Ensure(fork());
-        if (childpid == 0)
-        {
-            ChildProcess(targetName, tempDirectory.string(), timeLimit, memoryLimit, inputFileName, outputFileName, "", false);
+        if (childpid == 0) {
+            ChildProcess(targetName, tempDirectory.string(), timeLimit, memoryLimit, inputFileName, outputFileName, "",
+                         false);
             exit(1);
-        }
-        else
-        {
+        } else {
             // Pass <C-c> to app
             auto interrupt_signal = EnsureNot(signal(SIGINT, SIG_IGN), SIG_ERR);
             auto quit_signal = EnsureNot(signal(SIGQUIT, SIG_IGN), SIG_ERR);
@@ -396,28 +366,22 @@ ExecutionResult RunSandbox(path tempDirectory, string targetName, string inputFi
             EnsureNot(signal(SIGQUIT, quit_signal), SIG_ERR);
 
             if (result.Status == Exited)
-                if (result.Memory > memoryLimit)
-                {
+                if (result.Memory > memoryLimit) {
                     result.Status = MemoryLimitExceeded;
-                }
-                else if (result.Time > timeLimit)
-                {
+                } else if (result.Time > timeLimit) {
                     result.Status = TimeLimitExceeded;
                 }
 
             Ensure(write(pipefd[1], &result, sizeof(result)));
         }
         exit(0);
-    }
-    else
-    {
+    } else {
         Ensure(close(pipefd[1]));
 
         RunResult result;
         int status;
         Ensure(waitpid(pid, &status, 0));
-        if (!WIFEXITED(status))
-        {
+        if (!WIFEXITED(status)) {
             throw runtime_error("Child did not exit cleanly.");
         }
 
@@ -426,27 +390,25 @@ ExecutionResult RunSandbox(path tempDirectory, string targetName, string inputFi
 
         exeResult.Status = result.Status;
 
-        if (result.Status == Exited)
-        {
+        if (result.Status == Exited) {
             exeResult.Memory = result.Memory;
             exeResult.Time = result.Time;
-        }
-        else if (result.Status == Signaled)
-        {
-            exeResult.Message = str(format("Your program received %1%. Please refer to https://goo.gl/9opiOd for more details on signals.") % SignalToString(result.Code));
+        } else if (result.Status == Signaled) {
+            exeResult.Message = str(
+                    format("Your program received %1%. Please refer to https://goo.gl/9opiOd for more details on signals.") %
+                    SignalToString(result.Code));
             Log(format("App signaled (%1%).") % SignalToString(result.Code), Info);
-        }
-        else if (result.Status == BadSyscall)
-        {
-            switch (result.Code)
-            {
-            case SCMP_SYS(open):
-            case SCMP_SYS(close):
-                exeResult.Message = "You are calling `open()` or `close()`. Please remove any code related to file operation in your program.";
-                break;
-            default:
-                exeResult.Message = str(format("Your program has called `%1%()`. If your program contains no malicious code, please contact the administrator.") % SyscallToString(result.Code));
-                break;
+        } else if (result.Status == BadSyscall) {
+            switch (result.Code) {
+                case SCMP_SYS(open):
+                case SCMP_SYS(close):
+                    exeResult.Message = "You are calling `open()` or `close()`. Please remove any code related to file operation in your program.";
+                    break;
+                default:
+                    exeResult.Message = str(
+                            format("Your program has called `%1%()`. If your program contains no malicious code, please contact the administrator.") %
+                            SyscallToString(result.Code));
+                    break;
             }
             Log(format("App called forbidden syscall `%1%()`.") % SyscallToString(result.Code), Info);
         }

@@ -6,14 +6,14 @@
 using std::string;
 
 bool ReadConfigurationFile() {
-	if (SystemConf.ReadConfiguration()) {
-		OutputLog("System configuration file parsed successfully.");
-		return true;
-	} else {
-		OutputLog("Error: Configuration file fetal error, terminating process.");
-		exit(1);
-	}
-	return false;
+    if (SystemConf.ReadConfiguration()) {
+        OutputLog("System configuration file parsed successfully.");
+        return true;
+    } else {
+        OutputLog("Error: Configuration file fetal error, terminating process.");
+        exit(1);
+    }
+    return false;
 }
 
 // Backup:

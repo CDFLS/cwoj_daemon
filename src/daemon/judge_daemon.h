@@ -1,87 +1,92 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <ctime>
 #include <mutex>
 
 enum JudgeActionType {
-	JUDGE_ACTION_NORMAL = 0, JUDGE_ACTION_REJUDGE = 1
+    JUDGE_ACTION_NORMAL = 0, JUDGE_ACTION_REJUDGE = 1
 };
 
 enum HttpMessageType {
-	MESSAGE_PROBLEM,
-	MESSAGE_LANGUAGE,
-	MESSAGE_TIME,
-	MESSAGE_MEMORY,
-	MESSAGE_SCORE,
-	MESSAGE_CODE,
-	MESSAGE_USER,
-	MESSAGE_KEY,
-	MESSAGE_SHARE,
-	MESSAGE_COMPARE,
-	MESSAGE_REJUDGE
+    MESSAGE_PROBLEM,
+    MESSAGE_LANGUAGE,
+    MESSAGE_TIME,
+    MESSAGE_MEMORY,
+    MESSAGE_SCORE,
+    MESSAGE_CODE,
+    MESSAGE_USER,
+    MESSAGE_KEY,
+    MESSAGE_SHARE,
+    MESSAGE_COMPARE,
+    MESSAGE_REJUDGE
 };
 
 enum JudgeResultType {
-	SOLUTION_ACCEPT = 0,
-	SOLUTION_COMPILATION_ERROR = 7,
-	SOLUTION_TIME_LIMIT_EXCEEDED = 2,
-	SOLUTION_MEMORY_LIMIT_EXCEEDED = 3,
-	SOLUTION_WRONG_ANSWER = 4,
-	SOLUTION_RUNTIME_ERROR = 5,
-	SOLUTION_VALIDATOR_ERROR = 99,
-	SOLUTION_SYSTEM_ERROR = 100
+    SOLUTION_ACCEPT = 0,
+    SOLUTION_COMPILATION_ERROR = 7,
+    SOLUTION_TIME_LIMIT_EXCEEDED = 2,
+    SOLUTION_MEMORY_LIMIT_EXCEEDED = 3,
+    SOLUTION_WRONG_ANSWER = 4,
+    SOLUTION_RUNTIME_ERROR = 5,
+    SOLUTION_VALIDATOR_ERROR = 99,
+    SOLUTION_SYSTEM_ERROR = 100
 };
 
 enum ValidatorResult {
-	VALIDATOR_FUCKED = -1,
-	VALIDATOR_IDENTICAL = 0,
-	VALIDATOR_MISMATCH = 1,
-	VALIDATOR_LONGER = 2,
-	VALIDATOR_SHORTER = 3
+    VALIDATOR_FUCKED = -1,
+    VALIDATOR_IDENTICAL = 0,
+    VALIDATOR_MISMATCH = 1,
+    VALIDATOR_LONGER = 2,
+    VALIDATOR_SHORTER = 3
 };
 
 class SingleTestCaseReport {
 public:
-	int ErrorCode, TimeProfile, MemoryProfile;
-	std::string AdditionalInformation;
-	int CaseScore;
+    int ErrorCode, TimeProfile, MemoryProfile;
+    std::string AdditionalInformation;
+    int CaseScore;
 };
 
 class ExecutionInfo {
 public:
-	int State, Time, Memory;
-	char *Info;
+    int State, Time, Memory;
+    char *Info;
 };
 
 class ValidatorInfo {
 public:
-	int Result;
-	char *UserMismatch;
-	char *StandardMismatch;
+    int Result;
+    char *UserMismatch;
+    char *StandardMismatch;
 };
 
 class solution {
 public:
-	int ProblemFK, ComparisonMode, LanguageType, TimeLimit, MemoryLimit, SolutionScore, ErrorCode;
-	bool IsCodeOpenSourced;
-	unsigned char SolutionType;
-	std::string SourceCode, UserName, Key, LastState;
-	std::vector<SingleTestCaseReport> TestCaseDetail;
-	std::mutex *QueryMutex;//use void* to avoid including <mutex>
-	time_t TimeStamp;
-	const char *TargetPath;
+    int ProblemFK, ComparisonMode, LanguageType, TimeLimit, MemoryLimit, SolutionScore, ErrorCode;
+    bool IsCodeOpenSourced;
+    unsigned char SolutionType;
+    std::string SourceCode, UserName, Key, LastState;
+    std::vector<SingleTestCaseReport> TestCaseDetail;
+    std::mutex *QueryMutex;//use void* to avoid including <mutex>
+    time_t TimeStamp;
+    const char *TargetPath;
 #ifdef DUMP_FOR_DEBUG
-	std::string RawPostData;
+    std::string RawPostData;
 #endif
 
-	solution();
-	~solution();
+    solution();
 
-	void CloneFrom(const solution &) throw();
-	bool Compile() throw(const char *);
-	void Judge() throw(const char *);
-	void WriteDatabase() throw(const char *);
+    ~solution();
+
+    void CloneFrom(const solution &) throw();
+
+    bool Compile() throw(const char *);
+
+    void Judge() throw(const char *);
+
+    void WriteDatabase() throw(const char *);
 };
 
 typedef int (*run_compiler_def)(const char *, char *, int);

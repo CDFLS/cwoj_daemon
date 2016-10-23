@@ -38,13 +38,11 @@ using boost::unique_lock;
 //#define USE_CENA_VALIDATOR
 
 
-enum
-{
+enum {
     CMP_tra, CMP_float, CMP_int, CMP_spj
 };
 
-bool clean_files() throw()
-{
+bool clean_files() throw() {
     int ret;
 #ifdef _WIN32
     ret = system("del /f /q /s *");
@@ -54,8 +52,7 @@ bool clean_files() throw()
     return ret == 0;
 }
 
-solution::solution()
-{
+solution::solution() {
     TargetPath = getTargetPath();
     QueryMutex = new std::mutex;
     ProblemFK = ComparisonMode = LanguageType = TimeLimit = MemoryLimit = SolutionScore = ErrorCode = 0;
@@ -64,13 +61,11 @@ solution::solution()
     SolutionType = JUDGE_ACTION_NORMAL;
 }
 
-solution::~solution()
-{
+solution::~solution() {
     delete QueryMutex;
 }
 
-void solution::CloneFrom(const solution &from) throw()
-{
+void solution::CloneFrom(const solution &from) throw() {
     ProblemFK = from.ProblemFK;
     ComparisonMode = from.ComparisonMode;
     LanguageType = from.LanguageType;
@@ -85,11 +80,9 @@ const string TargetName("target");
 const string InputName("user.in");
 const string OutputName("user.out");
 
-bool solution::Compile() throw(const char *)
-{
+bool solution::Compile() throw(const char *) {
     puts("compile");
-    if (!SystemConf.IsLanguageExists(LanguageType))
-    {
+    if (!SystemConf.IsLanguageExists(LanguageType)) {
         throw "Language doesn't exist";
     }
     path sourceCodeFile(TargetName);
@@ -117,36 +110,27 @@ bool solution::Compile() throw(const char *)
     system(command.c_str());
 
     FILE *output = fopen("err.out", "r");
-    if (!output)
-    {
+    if (!output) {
         throw "Can't open compiler output";
     }
     char *buffer = new char[65536];
-    if (!buffer)
-    {
+    if (!buffer) {
         throw "Failed to allocate buffer.";
     }
     int read_size = fread(buffer, 1, 65400, output);
     buffer[read_size] = '\0';
     fclose(output);
 
-    if (exists(targetFile))
-    {
-        if (strstr(buffer, "@~good~@") == NULL)
-        {
+    if (exists(targetFile)) {
+        if (strstr(buffer, "@~good~@") == NULL) {
             OutputLog("Info: Execute file exists, but compiler doesn't return 0.");
         }
         delete[] buffer;
-    }
-    else
-    {
-        if (strstr(buffer, "@~good~@") != NULL)
-        {
+    } else {
+        if (strstr(buffer, "@~good~@") != NULL) {
             delete[] buffer;
             throw "Compiler returned 0, but execute file doesn't exist.";
-        }
-        else
-        {
+        } else {
             LastState = buffer;
             SolutionScore = TimeLimit = MemoryLimit = 0;
             ErrorCode = SOLUTION_COMPILATION_ERROR;
@@ -164,8 +148,7 @@ bool solution::Compile() throw(const char *)
     return true;
 }
 
-void solution::Judge() throw(const char *)
-{
+void solution::Judge() throw(const char *) {
     // Test Code Start -- Yoto
     string testOut;
     testOut += "ProblemFK = " + to_string(ProblemFK) + "\n";
@@ -183,8 +166,7 @@ void solution::Judge() throw(const char *)
     testOut += "TargetPath = " + string(TargetPath) + "\n";
 
     int counter = 0;
-    for (SingleTestCaseReport &tc : TestCaseDetail)
-    {
+    for (SingleTestCaseReport &tc : TestCaseDetail) {
         testOut += "TestCaseDetails[" + to_string(counter) + "] = { ";
         testOut += "ErrorCode = " + to_string(tc.ErrorCode) + ", ";
         testOut += "TimeProfile = " + to_string(tc.TimeProfile) + ", ";
@@ -204,8 +186,7 @@ void solution::Judge() throw(const char *)
 
     sprintf(dir_name, "%s/%d", SystemConf.DataDir.c_str(), ProblemFK);
     DIR *dp = opendir(dir_name);
-    if (dp == NULL)
-    {
+    if (dp == NULL) {
         ErrorCode = SOLUTION_SYSTEM_ERROR;
         LastState = "No data files";
         throw "Can't open data dir";
@@ -213,18 +194,15 @@ void solution::Judge() throw(const char *)
     std::vector<std::string> in_files;
     struct dirent *ep;
     ep = readdir(dp);
-    while (ep)
-    {
+    while (ep) {
         int len = strlen(ep->d_name);
-        if (len > 3 && 0 == strcasecmp(ep->d_name + len - 3, ".in"))
-        {
+        if (len > 3 && 0 == strcasecmp(ep->d_name + len - 3, ".in")) {
             in_files.push_back(std::string(ep->d_name));
         }
         ep = readdir(dp);
     }
     closedir(dp);
-    if (in_files.empty())
-    {
+    if (in_files.empty()) {
         ErrorCode = SOLUTION_SYSTEM_ERROR;
         LastState = "No data files";
         throw "Data folder is empty";
@@ -240,8 +218,7 @@ void solution::Judge() throw(const char *)
     int status;
     std::string tips;
     path tempDirectory(SystemConf.TempDir), dataDirectory(dir_name);
-    for (std::string &d_name : in_files)
-    {
+    for (std::string &d_name : in_files) {
         path inputFile, tempInputFile, outputFile, answerFile;
 
         inputFile = dataDirectory / d_name;
@@ -250,13 +227,11 @@ void solution::Judge() throw(const char *)
         answerFile = inputFile;
         answerFile.replace_extension("out");
 
-        try
-        {
+        try {
             copy_file(inputFile, tempInputFile);
             OutputLog("Temp file created.");
         }
-        catch (filesystem_error &ex)
-        {
+        catch (filesystem_error &ex) {
             OutputLog("Failed to create temp file.", ex.what());
             throw ex.what();
         }
@@ -267,92 +242,76 @@ void solution::Judge() throw(const char *)
 
         result = RunSandbox(tempDirectory, TargetName, InputName, OutputName, TimeLimit,
                             (SystemConf.FindLanguage(LanguageType)->ExtraMemory + MemoryLimit) /*to byte*/);
-        if (result.Status == Exited)
-        {
+        if (result.Status == Exited) {
             cerr << "Answer file is: " << answerFile.string() << endl;
             FILE *fanswer = fopen(answerFile.string().c_str(), "rb");
-            if (fanswer)
-            {
+            if (fanswer) {
                 FILE *foutput = fopen(outputFile.string().c_str(), "rb"), *finput;
-                if (foutput)
-                {
+                if (foutput) {
                     ValidatorInfo info;
 
-                    switch (ComparisonMode >> 16)
-                    {
-                    case CMP_tra:
+                    switch (ComparisonMode >> 16) {
+                        case CMP_tra:
 #ifdef USE_CENA_VALIDATOR
-                        info = validator_cena(fanswer, foutput);
+                            info = validator_cena(fanswer, foutput);
 #else
-                        info = validator(fanswer, foutput);//traditional OI comparison (Ignore trailing space)
+                            info = validator(fanswer, foutput);//traditional OI comparison (Ignore trailing space)
 #endif
-                        break;
-                    case CMP_float:
-                        info = validator_float(fanswer, foutput, (ComparisonMode & 0xffff)); //precision comparison
-                        break;
-                    case CMP_int:
-                        info = validator_int(fanswer, foutput);
-                        break;
-                    case CMP_spj:
-                        sprintf(input_filename, "%s/%s", dir_name, d_name.c_str());
-                        // info = run_spj(buffer, input_filename, &get_score, dir_name);//in call_ruc.cpp
-                        break;
-                    default:
-                        info.Result = -1; //validator error
+                            break;
+                        case CMP_float:
+                            info = validator_float(fanswer, foutput, (ComparisonMode & 0xffff)); //precision comparison
+                            break;
+                        case CMP_int:
+                            info = validator_int(fanswer, foutput);
+                            break;
+                        case CMP_spj:
+                            sprintf(input_filename, "%s/%s", dir_name, d_name.c_str());
+                            // info = run_spj(buffer, input_filename, &get_score, dir_name);//in call_ruc.cpp
+                            break;
+                        default:
+                            info.Result = -1; //validator error
                     }
                     fclose(foutput);
 
                     int s = info.Result;
-                    if (!s)
-                    {
+                    if (!s) {
                         status = SOLUTION_ACCEPT;
                         tips = "Good Job!";
                         total_score += get_score;
-                    }
-                    else if (s == -1)
-                    {
+                    } else if (s == -1) {
                         status = SOLUTION_VALIDATOR_ERROR;
                         tips = "Please contact administrator.";
                         get_score = 0;
-                    }
-                    else if (s == 4)     // for spj
+                    } else if (s == 4)     // for spj
                     {
                         status = (get_score == case_score) ? SOLUTION_ACCEPT : SOLUTION_WRONG_ANSWER;
                         total_score += get_score;
                         tips = info.UserMismatch;
                         free(info.UserMismatch);
-                    }
-                    else
-                    {
+                    } else {
                         status = SOLUTION_WRONG_ANSWER;
                         get_score = 0;
-                        if (s == 1)
-                        {
+                        if (s == 1) {
                             tips = "Output mismatch.\nYours: ";
                             tips += info.UserMismatch;
                             tips += "\nAnswer: ";
                             tips += info.StandardMismatch;
                             free(info.UserMismatch);
                             free(info.StandardMismatch);
-                        }
-                        else if (s == 2)
+                        } else if (s == 2)
                             tips = "Your output is longer than standard output.";
                         else if (s == 3)
                             tips = "Your output is shorter than standard output.";
                         else //unknown result
                             tips = "";
                     }
-                }
-                else
-                {
+                } else {
                     status = SOLUTION_WRONG_ANSWER;
                     get_score = 0;
                     tips = "Cannot find output file.";
                 }
                 fclose(fanswer);
-            }
-            else
-            {
+            } else {
                 int err = errno;
                 cerr << "Errno is " << errno << endl;
                 OutputLog((std::string("Info: No answer file ") + buffer).c_str());
@@ -360,19 +319,17 @@ void solution::Judge() throw(const char *)
                 tips = "No answer file";
                 status = SOLUTION_WRONG_ANSWER;
             }
-        }
-        else     //RE,TLE,MLE
+        } else     //RE,TLE,MLE
         {
             get_score = 0;
-            
+
             /*status = result.State;
             if (status == SOLUTION_RUNTIME_ERROR)
                 tips = result.Info;
             else
                 tips = "";
                 */
-            switch(result.Status)
-            {
+            switch (result.Status) {
                 case TimeLimitExceeded:
                     status = SOLUTION_TIME_LIMIT_EXCEEDED;
                     break;
@@ -418,8 +375,7 @@ void solution::Judge() throw(const char *)
     printf("error_code %d, time %dms, memory %dkB, score %d\n", ErrorCode, TimeLimit, MemoryLimit, SolutionScore);
 }
 
-void solution::WriteDatabase() throw(const char *)
-{
+void solution::WriteDatabase() throw(const char *) {
     int id = get_next_solution_id();
     printf("solution_id: %d\n", id);
     if (this->UserName.size() == 0)

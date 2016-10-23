@@ -23,90 +23,90 @@ translated into C by zyx
 static int fs[2], line, col[2];
 static FILE *f[2];
 struct Tchar {
-	bool have, he;
-	int eml;
-	char c;
+    bool have, he;
+    int eml;
+    char c;
 } chars[2];
 
 void GetChar(int fi) {
-	char ch, last;
-	last = 0;
-	for (;;) {
-		ch = fgetc(f[fi]);
-		if (ch == EOF)
-			return;
-		if (ch == 10) {
-			if (last != 13)
-				chars[fi].eml++;
-			col[fi] = 0;
-			chars[fi].he = false;
-		} else if (ch == 13) {
-			chars[fi].eml++;
-			col[fi] = 0;
-			chars[fi].he = false;
-		} else {
-			col[fi]++;
-			if (ch == ' ') {
-				if (chars[fi].eml == 0)
-					chars[fi].he = true;
-			} else {
-				chars[fi].c = ch;
-				break;
-			}
-		}
-		last = ch;
-	}
-	chars[fi].have = true;
-	if (fi == 0)
-		line += chars[fi].eml;
+    char ch, last;
+    last = 0;
+    for (;;) {
+        ch = fgetc(f[fi]);
+        if (ch == EOF)
+            return;
+        if (ch == 10) {
+            if (last != 13)
+                chars[fi].eml++;
+            col[fi] = 0;
+            chars[fi].he = false;
+        } else if (ch == 13) {
+            chars[fi].eml++;
+            col[fi] = 0;
+            chars[fi].he = false;
+        } else {
+            col[fi]++;
+            if (ch == ' ') {
+                if (chars[fi].eml == 0)
+                    chars[fi].he = true;
+            } else {
+                chars[fi].c = ch;
+                break;
+            }
+        }
+        last = ch;
+    }
+    chars[fi].have = true;
+    if (fi == 0)
+        line += chars[fi].eml;
 }
 
 int CheckNow() {
-	int result;
-	col[0] = col[1] = fs[0] = fs[1] = line = 0;
-	memset(chars, 0, sizeof(chars));
+    int result;
+    col[0] = col[1] = fs[0] = fs[1] = line = 0;
+    memset(chars, 0, sizeof(chars));
 
-	result = VAL_IDENTICAL;
-	chars[0].eml = chars[1].eml = 1;
+    result = VAL_IDENTICAL;
+    chars[0].eml = chars[1].eml = 1;
 
-	for (;;) {
-		GetChar(0);
-		GetChar(1);
+    for (;;) {
+        GetChar(0);
+        GetChar(1);
 
-		if (!chars[0].have && !chars[1].have)
-			return result;
+        if (!chars[0].have && !chars[1].have)
+            return result;
 
-		if (chars[0].have && !chars[1].have) {
-			result = VAL_LONGER;
-			return result;
-		}
-		if (!chars[0].have && chars[1].have) {
-			result = VAL_SHORTER;
-			return result;
-		}
-		if (chars[0].eml > chars[1].eml) {
-			result = VAL_MISMATCH;
-			return result;
-		}
-		if (chars[1].eml > chars[0].eml) {
-			result = VAL_MISMATCH;
-			return result;
-		}
-		if (chars[0].he != chars[1].he || chars[0].c != chars[1].c) {
-			result = VAL_MISMATCH;
-			return result;
-		}
+        if (chars[0].have && !chars[1].have) {
+            result = VAL_LONGER;
+            return result;
+        }
+        if (!chars[0].have && chars[1].have) {
+            result = VAL_SHORTER;
+            return result;
+        }
+        if (chars[0].eml > chars[1].eml) {
+            result = VAL_MISMATCH;
+            return result;
+        }
+        if (chars[1].eml > chars[0].eml) {
+            result = VAL_MISMATCH;
+            return result;
+        }
+        if (chars[0].he != chars[1].he || chars[0].c != chars[1].c) {
+            result = VAL_MISMATCH;
+            return result;
+        }
 
-		memset(chars, 0, sizeof(chars));
-	}
-	return VAL_FUCKED;
+        memset(chars, 0, sizeof(chars));
+    }
+    return VAL_FUCKED;
 }
 
 struct ValidatorInfo validator_cena(FILE *fstd, FILE *fuser) {
-	ValidatorInfo result;
+    ValidatorInfo result;
 
-	f[0] = fuser;
-	f[1] = fstd;
+    f[0] = fuser;
+    f[1] = fstd;
 /*	
 	if(!fstd || fseek(fstd, 0, SEEK_END) || (fs[1]=ftell(fstd))==-1)
 		return VAL_FUCKED;
@@ -116,15 +116,15 @@ struct ValidatorInfo validator_cena(FILE *fstd, FILE *fuser) {
 	rewind(fstd);
 	rewind(fuser);
 */
-	result.Result = CheckNow();
-	if (result.Result == VAL_MISMATCH) {
-		result.UserMismatch = (char *) malloc(3);
-		result.StandardMismatch = (char *) malloc(3);
+    result.Result = CheckNow();
+    if (result.Result == VAL_MISMATCH) {
+        result.UserMismatch = (char *) malloc(3);
+        result.StandardMismatch = (char *) malloc(3);
 
-		*result.UserMismatch = *result.StandardMismatch = 0;
-	}
+        *result.UserMismatch = *result.StandardMismatch = 0;
+    }
 
-	return result;
+    return result;
 }
 /*
 int main()
