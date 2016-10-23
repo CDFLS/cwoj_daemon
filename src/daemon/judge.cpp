@@ -115,7 +115,7 @@ bool solution::Compile() throw(const char *) {
     }
     char *buffer = new char[65536];
     if (!buffer) {
-        throw "Failed to allocate buffer.";
+        throw "FAILED to allocate buffer.";
     }
     int read_size = fread(buffer, 1, 65400, output);
     buffer[read_size] = '\0';
@@ -232,7 +232,7 @@ void solution::Judge() throw(const char *) {
             OutputLog("Temp file created.");
         }
         catch (filesystem_error &ex) {
-            OutputLog("Failed to create temp file.", ex.what());
+            OutputLog("FAILED to create temp file.", ex.what());
             throw ex.what();
         }
 
@@ -242,7 +242,7 @@ void solution::Judge() throw(const char *) {
 
         result = RunSandbox(tempDirectory, TargetName, InputName, OutputName, TimeLimit,
                             (SystemConf.FindLanguage(LanguageType)->ExtraMemory + MemoryLimit) /*to byte*/);
-        if (result.Status == Exited) {
+        if (result.Status == EXITED) {
             cerr << "Answer file is: " << answerFile.string() << endl;
             FILE *fanswer = fopen(answerFile.string().c_str(), "rb");
             if (fanswer) {
@@ -330,18 +330,18 @@ void solution::Judge() throw(const char *) {
                 tips = "";
                 */
             switch (result.Status) {
-                case TimeLimitExceeded:
+                case TIME_LIMIT_EXCEEDED:
                     status = SOLUTION_TIME_LIMIT_EXCEEDED;
                     break;
-                case MemoryLimitExceeded:
+                case MEMORY_LIMIT_EXCEEDED:
                     status = SOLUTION_MEMORY_LIMIT_EXCEEDED;
                     break;
-                case BadSyscall:
-                case Signaled:
+                case BAD_SYSTEM_CALL:
+                case SIGNALED:
                     status = SOLUTION_RUNTIME_ERROR;
                     tips = result.Message;
                     break;
-                case Failed:
+                case FAILED:
                     status = SOLUTION_SYSTEM_ERROR;
                     tips = string("System Error.");
                     break;

@@ -209,7 +209,7 @@ RunResult TraceChild(int childpid) {
                         Log(format("Info: app is calling forbidden syscall `%1%()`, killing") %
                             SyscallToString(scno + 1), Debug);
                         childStatus = Kill;
-                        runResult.Status = BadSyscall;
+                        runResult.Status = BAD_SYSTEM_CALL;
                         runResult.Code = scno + 1;
                     }
                 } else if (status >> 8 == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
@@ -218,7 +218,7 @@ RunResult TraceChild(int childpid) {
                 } else if (WSTOPSIG(status) == SIGXCPU) {
                     // Time out
                     childStatus = Kill;
-                    runResult.Status = TimeLimitExceeded;
+                    runResult.Status = TIME_LIMIT_EXCEEDED;
                 } else {
                     Log(format("Unknown signal received: %1%, passing it to child.") % SignalToString(WSTOPSIG(status)),
                         Debug);
@@ -227,11 +227,11 @@ RunResult TraceChild(int childpid) {
             } else if (WIFEXITED(status)) {
                 Log(format("App exited with code %1%") % WEXITSTATUS(status), Debug);
                 childStatus = SelfExited;
-                runResult.Status = Exited;
+                runResult.Status = EXITED;
             } else if (WIFSIGNALED(status)) {
                 Log(format("App is signally killed, signal is %1%") % SignalToString(WTERMSIG(status)), Debug);
                 childStatus = SelfExited;
-                runResult.Status = Signaled;
+                runResult.Status = SIGNALED;
                 runResult.Code = WTERMSIG(status);
             }
         }
@@ -242,7 +242,7 @@ RunResult TraceChild(int childpid) {
         Log(format("Child dead."), Debug);
 
         // Get resource usage statistics
-        if (runResult.Status == Exited) {
+        if (runResult.Status == EXITED) {
             rusage res;
             getrusage(RUSAGE_CHILDREN, &res);
 
@@ -257,7 +257,7 @@ RunResult TraceChild(int childpid) {
         if (childStatus == Running || childStatus == Kill)
             kill(childpid, SIGKILL);
 
-        runResult.Status = Failed;
+        runResult.Status = FAILED;
     }
     return runResult;
 }
@@ -292,14 +292,14 @@ RunResult TraceChild(int childpid) {
             EnsureNot(signal(SIGINT, interrupt_signal), SIG_ERR);
             EnsureNot(signal(SIGQUIT, quit_signal), SIG_ERR);
 
-            if (result.Status == Exited)
+            if (result.Status == EXITED)
                 if (result.Memory > memoryLimit)
                 {
-                    result.Status = MemoryLimitExceeded;
+                    result.Status = MEMORY_LIMIT_EXCEEDED;
                 }
                 else if (result.Time > timeLimit)
                 {
-                    result.Status = TimeLimitExceeded;
+                    result.Status = TIME_LIMIT_EXCEEDED;
                 }
 
             Ensure(write(pipefd[1], &result, sizeof(result)));
@@ -321,15 +321,15 @@ RunResult TraceChild(int childpid) {
         Ensure(read(pipefd[0], &result, sizeof(result)));
         Ensure(close(pipefd[0]));
 
-        if (result.Status == Exited)
+        if (result.Status == EXITED)
         {
             Log(format("App exited. Memory: %1%, Time: %2%") % result.Memory % result.Time, Info);
         }
-        else if (result.Status == Signaled)
+        else if (result.Status == SIGNALED)
         {
             Log(format("App signaled (%1%).") % SignalToString(result.Code), Info);
         }
-        else if (result.Status == BadSyscall)
+        else if (result.Status == BAD_SYSTEM_CALL)
         {
             Log(format("App called forbidden syscall `%1%()`.") % SyscallToString(result.Code), Info);
         }
@@ -365,11 +365,11 @@ RunSandbox(path tempDirectory, string targetName, string inputFileName, string o
             EnsureNot(signal(SIGINT, interrupt_signal), SIG_ERR);
             EnsureNot(signal(SIGQUIT, quit_signal), SIG_ERR);
 
-            if (result.Status == Exited)
+            if (result.Status == EXITED)
                 if (result.Memory > memoryLimit) {
-                    result.Status = MemoryLimitExceeded;
+                    result.Status = MEMORY_LIMIT_EXCEEDED;
                 } else if (result.Time > timeLimit) {
-                    result.Status = TimeLimitExceeded;
+                    result.Status = TIME_LIMIT_EXCEEDED;
                 }
 
             Ensure(write(pipefd[1], &result, sizeof(result)));
@@ -390,15 +390,15 @@ RunSandbox(path tempDirectory, string targetName, string inputFileName, string o
 
         exeResult.Status = result.Status;
 
-        if (result.Status == Exited) {
+        if (result.Status == EXITED) {
             exeResult.Memory = result.Memory;
             exeResult.Time = result.Time;
-        } else if (result.Status == Signaled) {
+        } else if (result.Status == SIGNALED) {
             exeResult.Message = str(
                     format("Your program received %1%. Please refer to https://goo.gl/9opiOd for more details on signals.") %
                     SignalToString(result.Code));
             Log(format("App signaled (%1%).") % SignalToString(result.Code), Info);
-        } else if (result.Status == BadSyscall) {
+        } else if (result.Status == BAD_SYSTEM_CALL) {
             switch (result.Code) {
                 case SCMP_SYS(open):
                 case SCMP_SYS(close):

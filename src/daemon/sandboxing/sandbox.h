@@ -4,16 +4,12 @@
 #include <boost/filesystem.hpp>
 
 enum RunStatus {
-    // App exited normally.
-            Exited,
-    // App is kill by some signal.
-            Signaled,
-    // App is killed due to some bad syscalls.
-            BadSyscall,
-    TimeLimitExceeded,
-    MemoryLimitExceeded,
-    // Exceptions occurred while running child.
-            Failed
+    EXITED, // App exited normally.
+    SIGNALED, // App is kill by some signal.
+    BAD_SYSTEM_CALL, // App is killed due to some bad syscalls.
+    TIME_LIMIT_EXCEEDED,
+    MEMORY_LIMIT_EXCEEDED,
+    FAILED // Exceptions occurred while running child.
 };
 
 struct ExecutionResult {
@@ -23,5 +19,9 @@ struct ExecutionResult {
     int Memory;
 };
 
-ExecutionResult RunSandbox(boost::filesystem::path tempDirectory, std::string targetName, std::string inputFileName,
-                           std::string outputFileName, int timeLimit, int memoryLimit);
+ExecutionResult RunSandbox(boost::filesystem::path,
+                           std::string,
+                           std::string,
+                           std::string,
+                           int,
+                           int);

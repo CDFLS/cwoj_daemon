@@ -46,6 +46,8 @@ public:
     path DataDirectory, TempDirectory;
     u_int16_t HttpBindPort;
     std::vector<ProgrammingLanguage> Languages;
+    boost::filesystem::path NormalLogFile, ExceptionLogFile;
+    bool DebugMode;
 
     DaemonConfiguration();
 

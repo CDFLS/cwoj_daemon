@@ -17,7 +17,8 @@ typedef INI<string, string, string> SimpleIni;
 DaemonConfiguration SystemConf;
 
 DaemonConfiguration::DaemonConfiguration() :
-        Languages(std::vector<ProgrammingLanguage>()) {}
+        Languages(std::vector<ProgrammingLanguage>()),
+        DebugMode(false){}
 
 bool DaemonConfiguration::IsLanguageExists(int languageId) {
     for (ProgrammingLanguage &pl : Languages) {
