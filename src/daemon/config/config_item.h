@@ -37,7 +37,7 @@ class ProgrammingLanguage {
 public:
     int LanguageId;
     std::string FileExtension, CompilationExec;
-    uint64_t ExtraMemory;
+    u_int64_t ExtraMemory;
 };
 
 class DaemonConfiguration {

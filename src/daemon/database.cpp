@@ -18,7 +18,7 @@ namespace std {
 
 #include <mysql/mysql.h>
 #include "judge_daemon.h"
-#include "conf_items.h"
+#include "config/config_item.h"
 
 static std::mutex database_mutex;
 static MYSQL *hMySQL;

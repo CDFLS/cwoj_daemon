@@ -17,7 +17,7 @@ extern int inet_aton(const char *cp_arg, struct in_addr *addr);
 
 #include <microhttpd.h>
 #include "judge_daemon.h"
-#include "conf_items.h"
+#include "config/config_item.h"
 
 static char robots_txt[] = "User-agent: *\nDisallow: /\n";
 

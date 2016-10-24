@@ -1,5 +1,5 @@
 #include "judge_daemon.h"
-#include "conf_items.h"
+#include "config/config_item.h"
 #include "sandboxing/sandbox.h"
 #include <iostream>
 #include <fstream>

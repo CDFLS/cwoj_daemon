@@ -1,6 +1,6 @@
 #include "INI1.26.h" // "feather-ini-parser" on googlecode
 #include "judge_daemon.h"
-#include "conf_items.h"
+#include "config/config_item.h"
 #include <sys/param.h> //for MAXPATHLEN
 
 using std::string;

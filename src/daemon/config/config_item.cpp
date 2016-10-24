@@ -5,10 +5,10 @@
 #include <yaml-cpp/yaml.h>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include "INI1.26.h"
+#include "../INI1.26.h"
 
-#include "conf_items.h"
-#include "judge_daemon.h"
+#include "config_item.h"
+#include "../judge_daemon.h"
 
 using std::string;
 using boost::filesystem::path;
@@ -77,6 +77,9 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
     }
     OutputLog("Ip Address = " + HttpBindAddr);
     OutputLog("Port = " + HttpBindPort);
+
+
+
     return true;
 }
 

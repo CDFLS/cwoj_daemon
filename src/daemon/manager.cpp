@@ -37,7 +37,8 @@ namespace std {
 #endif
 
 #include "judge_daemon.h"
-#include "conf_items.h"
+#include "config/config_item.h"
+#include "log/cwojlog.h"
 
 static std::map<std::string, solution *> finder;
 static std::queue<solution *> waiting, removing;
@@ -323,6 +324,8 @@ int main(int argc, char **argv) {
         OutputLog("Error: Cannot read and parse the config.ini, Exit...");
         exit(1);
     }
+    InitDefaultLogger(SystemConf);
+
     if (!InitMySQLConnection()) {
         OutputLog("Error: Cannot connect to mysql, Exit...");
         exit(1);

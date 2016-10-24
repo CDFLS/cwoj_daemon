@@ -38,25 +38,30 @@ CwojLogger::~CwojLogger() {
     CloseStreams();
 }
 
-// TODO Finish this function
 void CwojLogger::Log(CwojLogLevel level, std::string content) {
+    string format = FormatLog(level, content);
     switch (level) {
         case DEBUG:
             if (_debugMode) {
-                cout << FormatLog(level, content);
+                cout << format;
             }
             break;
         case INFO:
-
+            cout << format;
             break;
         case IMPORTANT_INFO:
-
+            *_normalStream << format;
             break;
         case WARNING:
-
+            cout << format;
+            *_normalStream << format;
+            *_exceptionStream << format;
             break;
         case FETAL_ERROR:
-
+            cout << format;
+            *_normalStream << format;
+            *_exceptionStream << format;
+            Terminate();
             break;
     }
 }
@@ -96,4 +101,8 @@ string CwojLogger::FormatLog(CwojLogLevel level, string content) {
     return "[" LOG_PREFFIX "][" +
             string(ctime((const time_t *) system_clock::to_time_t(system_clock::now()))) +
             "][" + s + "]  " + content;
+}
+
+void CwojLogger::Terminate() {
+    exit(1);
 }

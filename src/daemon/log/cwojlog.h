@@ -9,7 +9,7 @@
 #include <string>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include "../conf_items.h"
+#include "../config/config_item.h"
 
 #define LOG_PREFFIX "CWOJ_DAEMON"
 
@@ -41,6 +41,8 @@ private:
     void CloseStreams();
 
     std::string FormatLog(CwojLogLevel, std::string);
+
+    void Terminate();
 };
 
 extern CwojLogger *DefaultLogger;

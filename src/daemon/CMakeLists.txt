@@ -7,6 +7,8 @@ find_package(seccomp)
 aux_source_directory(. DAEMON_SOURCE_FILES)
 aux_source_directory(./sandboxing/ DAEMON_SOURCE_FILES)
 aux_source_directory(./log/ DAEMON_SOURCE_FILES)
+aux_source_directory(./config/ DAEMON_SOURCE_FILES)
+aux_source_directory(./util/ DAEMON_SOURCE_FILES)
 add_executable(cwoj_daemon_daemon ${DAEMON_SOURCE_FILES})
 
 target_link_libraries(cwoj_daemon_daemon mysqlclient)
