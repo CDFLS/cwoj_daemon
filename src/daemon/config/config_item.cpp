@@ -9,6 +9,8 @@
 
 #include "config_item.h"
 #include "../judge_daemon.h"
+#include "conf_item_map.h"
+#include "../util/inline_util.h"
 
 using std::string;
 using boost::filesystem::path;
@@ -78,7 +80,14 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
     OutputLog("Ip Address = " + HttpBindAddr);
     OutputLog("Port = " + HttpBindPort);
 
+    for (void *pointer : ConfigItemList) {
+        ConfigFileItem item = *((ConfigFileItem *) pointer);
+        if (item.ValueType != ConfigItemType::VECTOR) {
+            if (item.PrefixHier != nullptr) {
 
+            }
+        }
+    }
 
     return true;
 }
