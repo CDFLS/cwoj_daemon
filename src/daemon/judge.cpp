@@ -216,9 +216,10 @@ void solution::Judge() throw(const char *) {
         case_score = 1;
 
     int status;
-    std::string tips;
+
     path tempDirectory(SystemConf.TempDir), dataDirectory(dir_name);
     for (std::string &d_name : in_files) {
+        std::string tips;
         path inputFile, tempInputFile, outputFile, answerFile;
 
         inputFile = dataDirectory / d_name;
@@ -228,10 +229,9 @@ void solution::Judge() throw(const char *) {
         answerFile.replace_extension("out");
 
         try {
-            copy_file(inputFile, tempInputFile);
+            copy_file(inputFile, tempInputFile, copy_option::overwrite_if_exists);
             OutputLog("Temp file created.");
-        }
-        catch (filesystem_error &ex) {
+        } catch (filesystem_error &ex) {
             OutputLog("FAILED to create temp file.", ex.what());
             throw ex.what();
         }
