@@ -238,10 +238,11 @@ void solution::Judge() throw(const char *)
         case_score = 1;
 
     int status;
-    std::string tips;
+    
     path tempDirectory(SystemConf.TempDir), dataDirectory(dir_name);
     for (std::string &d_name : in_files)
     {
+        std::string tips;
         path inputFile, tempInputFile, outputFile, answerFile;
 
         inputFile = dataDirectory / d_name;
