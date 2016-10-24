@@ -252,7 +252,7 @@ void solution::Judge() throw(const char *)
 
         try
         {
-            copy_file(inputFile, tempInputFile);
+            copy_file(inputFile, tempInputFile, copy_option::overwrite_if_exists);
             OutputLog("Temp file created.");
         }
         catch (filesystem_error &ex)
