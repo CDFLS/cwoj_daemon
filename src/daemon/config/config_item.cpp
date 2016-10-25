@@ -53,74 +53,72 @@ bool DaemonConfiguration::ReadConfiguration(std::string configFilePath) {
     }
 }
 
+// It cannot be declared as a class private inline member function. I'm so sad, because of the restriction of recursive header-file inclusion.
+template<typename B, typename O>
+static inline void AssignValueFromYaml(YAML::Node rootNode, DaemonConfiguration *obj, std::pair<void* const, ConfigItemType> &pair) {
+    ConfigFileItem<B, O> *item = (ConfigFileItem<B, O> *) pair.first;
+    if (item->PrefixHier == nullptr) {
+        *item->CastType(obj, item->DefaultConfObjItemPointer) = rootNode[item->ConfigKey].template as<O>();
+    } else {
+        *item->CastType(obj, item->DefaultConfObjItemPointer) = rootNode[*item->PrefixHier][item->ConfigKey].template as<O>();
+    }
+}
+
 bool DaemonConfiguration::ParseYaml(std::string path) {
     YAML::Node rootNode = YAML::LoadFile(path);
-
-    TempDirectory = boost::filesystem::path((string) rootNode["system"]["temp_dir"].as<string>());
-    DataDirectory = boost::filesystem::path((string) rootNode["system"]["data_dir"].as<string>());
-    TempDir = TempDirectory.string();
-    DataDir = DataDirectory.string();
-
-    UserName = rootNode["system"]["user_name"].as<string>();
-    DBHost = rootNode["system"]["db_host"].as<string>();
-    DBUser = rootNode["system"]["db_user"].as<string>();
-    DBPass = rootNode["system"]["db_pass"].as<string>();
-    DBName = rootNode["system"]["db_name"].as<string>();
-    HttpBindAddr = rootNode["system"]["http_bind_addr"].as<string>();
-    HttpBindPort = rootNode["system"]["http_bind_port"].as<u_int16_t>();
-    RucPath = rootNode["system"]["ruc_path"].as<string>();
-    for (const YAML::Node &node : rootNode["languages"]) {
-        ProgrammingLanguage pl;
-        pl.LanguageId = node["id"].as<int>() - 1;
-        pl.FileExtension = node["file_extension"].as<string>();
-        pl.ExtraMemory = node["extra_memory"].as<u_int64_t>();
-        pl.CompilationExec = node["compilation_exec"].as<string>();
-        SystemConf.Languages.push_back(pl);
-    }
-    OutputLog("Ip Address = " + HttpBindAddr);
-    OutputLog("Port = " + HttpBindPort);
 
     for (std::pair<void* const, ConfigItemType> &pair : ConfigItemMap) {
         if (pair.second != ConfigItemType::VECTOR) {
             switch (pair.second) {
-                case STRING:
-                    ConfigFileItem<DCF, string> *stringItem = (ConfigFileItem<DCF, string> *) pair.first;
-                    if (stringItem->PrefixHier == nullptr) {
-                        *stringItem->CastType(this, stringItem->DefaultConfObjItemPointer) = rootNode[stringItem->ConfigKey].as<std::string>();
-                    } else {
-                        *stringItem->CastType(this, stringItem->DefaultConfObjItemPointer) = rootNode[*stringItem->PrefixHier][stringItem->ConfigKey].as<std::string>();
-                    }
-                    break;
-                case PATH_STRING:
+                case PATH_STRING: // FIXME This is a special case that we cannot just simply apply AssignValue
                     ConfigFileItem<DCF, string> *pathItem = (ConfigFileItem<DCF, string> *) pair.first;
-                    // TODO
-                    break;
-                case PATH:
-                    ConfigFileItem<DCF, string> *pathStringItem = (ConfigFileItem<DCF, string> *) pair.first;
-                    if (pathStringItem->PrefixHier == nullptr) {
-                        *pathStringItem->CastType(this, pathStringItem->DefaultConfObjItemPointer) = path(rootNode[stringItem->ConfigKey].as<std::string>()).string();
+                    if (pathItem->PrefixHier == nullptr) {
+                        boost::filesystem::path path(rootNode[pathItem->ConfigKey].as<std::string>());
+                        *pathItem->CastType(this, pathItem->DefaultConfObjItemPointer) = path.string();
                     } else {
-                        *pathStringItem->CastType(this, pathStringItem->DefaultConfObjItemPointer) = path(rootNode[*pathStringItem->PrefixHier][stringItem->ConfigKey].as<std::string>()).string();
+                        boost::filesystem::path path(rootNode[*pathItem->PrefixHier][pathItem->ConfigKey].as<std::string>());
+                        *pathItem->CastType(this, pathItem->DefaultConfObjItemPointer) = path.string();
                     }
+                    break;
+                case PATH: // FIXME This is also a special case
+                    ConfigFileItem<DCF, boost::filesystem::path> *pathStringItem = (ConfigFileItem<DCF, boost::filesystem::path> *) pair.first;
+                    if (pathStringItem->PrefixHier == nullptr) {
+                        boost::filesystem::path path(rootNode[pathStringItem->ConfigKey].as<std::string>());
+                        *pathStringItem->CastType(this, pathStringItem->DefaultConfObjItemPointer) = path;
+                    } else {
+                        boost::filesystem::path path(rootNode[*pathStringItem->PrefixHier][pathStringItem->ConfigKey].as<std::string>());
+                        *pathStringItem->CastType(this, pathStringItem->DefaultConfObjItemPointer) = path;
+                    }
+                    break;
+                case STRING:
+//                    ConfigFileItem<DCF, string> *stringItem = (ConfigFileItem<DCF, string> *) pair.first;
+//                    if (stringItem->PrefixHier == nullptr) {
+//                        *stringItem->CastType(this, stringItem->DefaultConfObjItemPointer) = rootNode[stringItem->ConfigKey].as<std::string>();
+//                    } else {
+//                        *stringItem->CastType(this, stringItem->DefaultConfObjItemPointer) = rootNode[*stringItem->PrefixHier][stringItem->ConfigKey].as<std::string>();
+//                    }
+                    AssignValueFromYaml<DCF, string>(rootNode, this, pair);
                     break;
                 case BOOL:
-                    // TODO
-
+//                    ConfigFileItem<DCF, bool> *boolItem = (ConfigFileItem<DCF, bool> *) pair.first;
+//                    if (boolItem->PrefixHier == nullptr) {
+//                        *boolItem->CastType(this, boolItem->DefaultConfObjItemPointer) = rootNode[boolItem->ConfigKey].as<bool>();
+//                    } else {
+//                        *boolItem->CastType(this, boolItem->DefaultConfObjItemPointer) = rootNode[*boolItem->PrefixHier][boolItem->ConfigKey].as<bool>();
+//                    }
+                    AssignValueFromYaml<DCF, bool>(rootNode, this, pair);
                     break;
                 case SINT_32:
-                    // TODO
-
+                    AssignValueFromYaml<DCF, int32_t>(rootNode, this, pair);
                     break;
                 case UINT_16:
-                    // TODO
-
+                    AssignValueFromYaml<DCF, u_int16_t>(rootNode, this, pair);
                     break;
                 case UINT_64:
-                    // TODO
-
+                    AssignValueFromYaml<DCF, u_int64_t>(rootNode, this, pair);
                     break;
                 default:
-                    break;
+                    return false;
             }
         } else {
 
@@ -128,6 +126,32 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
     }
 
     return true;
+
+//    TempDirectory = boost::filesystem::path((string) rootNode["system"]["temp_dir"].as<string>());
+//    DataDirectory = boost::filesystem::path((string) rootNode["system"]["data_dir"].as<string>());
+//    TempDir = TempDirectory.string();
+//    DataDir = DataDirectory.string();
+//
+//    UserName = rootNode["system"]["user_name"].as<string>();
+//    DBHost = rootNode["system"]["db_host"].as<string>();
+//    DBUser = rootNode["system"]["db_user"].as<string>();
+//    DBPass = rootNode["system"]["db_pass"].as<string>();
+//    DBName = rootNode["system"]["db_name"].as<string>();
+//    HttpBindAddr = rootNode["system"]["http_bind_addr"].as<string>();
+//    HttpBindPort = rootNode["system"]["http_bind_port"].as<u_int16_t>();
+//    RucPath = rootNode["system"]["ruc_path"].as<string>();
+//    for (const YAML::Node &node : rootNode["languages"]) {
+//        ProgrammingLanguage pl;
+//        pl.LanguageId = node["id"].as<int>() - 1;
+//        pl.FileExtension = node["file_extension"].as<string>();
+//        pl.ExtraMemory = node["extra_memory"].as<u_int64_t>();
+//        pl.CompilationExec = node["compilation_exec"].as<string>();
+//        SystemConf.Languages.push_back(pl);
+//    }
+//    OutputLog("Ip Address = " + HttpBindAddr);
+//    OutputLog("Port = " + HttpBindPort);
+
+
 }
 
 bool DaemonConfiguration::ParseIni(std::string path) {
