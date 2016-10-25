@@ -73,19 +73,57 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
         ProgrammingLanguage pl;
         pl.LanguageId = node["id"].as<int>() - 1;
         pl.FileExtension = node["file_extension"].as<string>();
-        pl.ExtraMemory = node["extra_memory"].as<uint64_t>();
+        pl.ExtraMemory = node["extra_memory"].as<u_int64_t>();
         pl.CompilationExec = node["compilation_exec"].as<string>();
         SystemConf.Languages.push_back(pl);
     }
     OutputLog("Ip Address = " + HttpBindAddr);
     OutputLog("Port = " + HttpBindPort);
 
-    for (void *pointer : ConfigItemList) {
-        ConfigFileItem item = *((ConfigFileItem *) pointer);
-        if (item.ValueType != ConfigItemType::VECTOR) {
-            if (item.PrefixHier != nullptr) {
+    for (std::pair<void* const, ConfigItemType> &pair : ConfigItemMap) {
+        if (pair.second != ConfigItemType::VECTOR) {
+            switch (pair.second) {
+                case STRING:
+                    ConfigFileItem<DCF, string> *stringItem = (ConfigFileItem<DCF, string> *) pair.first;
+                    if (stringItem->PrefixHier == nullptr) {
+                        *stringItem->CastType(this, stringItem->DefaultConfObjItemPointer) = rootNode[stringItem->ConfigKey].as<std::string>();
+                    } else {
+                        *stringItem->CastType(this, stringItem->DefaultConfObjItemPointer) = rootNode[*stringItem->PrefixHier][stringItem->ConfigKey].as<std::string>();
+                    }
+                    break;
+                case PATH_STRING:
+                    ConfigFileItem<DCF, string> *pathItem = (ConfigFileItem<DCF, string> *) pair.first;
+                    // TODO
+                    break;
+                case PATH:
+                    ConfigFileItem<DCF, string> *pathStringItem = (ConfigFileItem<DCF, string> *) pair.first;
+                    if (pathStringItem->PrefixHier == nullptr) {
+                        *pathStringItem->CastType(this, pathStringItem->DefaultConfObjItemPointer) = path(rootNode[stringItem->ConfigKey].as<std::string>()).string();
+                    } else {
+                        *pathStringItem->CastType(this, pathStringItem->DefaultConfObjItemPointer) = path(rootNode[*pathStringItem->PrefixHier][stringItem->ConfigKey].as<std::string>()).string();
+                    }
+                    break;
+                case BOOL:
+                    // TODO
 
+                    break;
+                case SINT_32:
+                    // TODO
+
+                    break;
+                case UINT_16:
+                    // TODO
+
+                    break;
+                case UINT_64:
+                    // TODO
+
+                    break;
+                default:
+                    break;
             }
+        } else {
+
         }
     }
 

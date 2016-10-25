@@ -43,7 +43,7 @@ public:
 class DaemonConfiguration {
 public:
     std::string DBHost, DBUser, DBPass, DBName, HttpBindAddr, DataDir, TempDir, RucPath, UserName;
-    path DataDirectory, TempDirectory;
+    boost::filesystem::path DataDirectory, TempDirectory;
     u_int16_t HttpBindPort;
     std::vector<ProgrammingLanguage> Languages;
     boost::filesystem::path NormalLogFile, ExceptionLogFile;

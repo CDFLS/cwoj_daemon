@@ -16,9 +16,11 @@ extern DaemonConfiguration SystemConf;
 
 enum ConfigItemType {
     STRING,
-    SINT, // Signed int
-    UINT, // Unsigned int
+    SINT_32,
+    UINT_16,
+    UINT_64,
     PATH,
+    PATH_STRING,
     BOOL,
     VECTOR
 };
@@ -30,7 +32,7 @@ public:
     ConfigItemType ValueType;
     std::string ConfigKey;
     T D::*DefaultConfObjItemPointer;
-    std::vector<void *> *SubLevelItem = nullptr;
+    std::map<void *, ConfigItemType> *SubLevelItem = nullptr;
 
     inline T *CastType(DaemonConfiguration *confObj, T DaemonConfiguration::* targetObj) {
         return FromOffset<DaemonConfiguration, T>(confObj, targetObj);
@@ -40,7 +42,7 @@ public:
                           ConfigItemType type,
                           std::string key,
                           T D::*pointer,
-                          std::vector<void *> *sublevel):
+                          std::map<void *, ConfigItemType> *sublevel):
             PrefixHier(prefix),
             ValueType(type),
             ConfigKey(key),
@@ -48,106 +50,169 @@ public:
             SubLevelItem(sublevel) {}
 };
 
-std::vector<void *> ConfigItemList{
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "data_dir",
-                &DaemonConfiguration::DataDir,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "temp_dir",
-                &DaemonConfiguration::TempDir,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "db_host",
-                &DaemonConfiguration::DBHost,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "db_user",
-                &DaemonConfiguration::DBUser,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "db_pass",
-                &DaemonConfiguration::DBPass,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "db_name",
-                &DaemonConfiguration::DBName,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "http_bind_addr",
-                &DaemonConfiguration::HttpBindAddr,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, u_int16_t>(
-                new std::string("system"),
-                ConfigItemType::UINT,
-                "http_bind_port",
-                &DaemonConfiguration::HttpBindPort,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::string>(
-                new std::string("system"),
-                ConfigItemType::STRING,
-                "ruc_path",
-                &DaemonConfiguration::RucPath,
-                nullptr
-        ),
-        new ConfigFileItem<DaemonConfiguration, std::vector<ProgrammingLanguage>>(
-                new std::string("system"),
-                ConfigItemType::VECTOR,
-                "languages",
-                &DaemonConfiguration::Languages,
-                new std::vector<void *> {
-                        new ConfigFileItem<ProgrammingLanguage, int>(
-                                nullptr,
-                                ConfigItemType::STRING,
-                                "id",
-                                &ProgrammingLanguage::LanguageId,
-                                nullptr
-                        ),
-                        new ConfigFileItem<ProgrammingLanguage, std::string>(
-                                nullptr,
-                                ConfigItemType::STRING,
-                                "file_extension",
-                                &ProgrammingLanguage::FileExtension,
-                                nullptr
-                        ),
-                        new ConfigFileItem<ProgrammingLanguage, u_int64_t>(
-                                nullptr,
-                                ConfigItemType::UINT,
-                                "extra_memory",
-                                &ProgrammingLanguage::ExtraMemory,
-                                nullptr
-                        ),
-                        new ConfigFileItem<ProgrammingLanguage, std::string>(
-                                nullptr,
-                                ConfigItemType::STRING,
-                                "compilation_exec",
-                                &ProgrammingLanguage::CompilationExec,
-                                nullptr
-                        ),
-                }
-        )
+typedef DaemonConfiguration DCF; // Default Configuration Object
+std::map<void *, ConfigItemType> ConfigItemMap{
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::PATH_STRING,
+                        "data_dir",
+                        &DaemonConfiguration::DataDir,
+                        nullptr
+                ),
+                ConfigItemType::PATH_STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::PATH_STRING,
+                        "temp_dir",
+                        &DaemonConfiguration::TempDir,
+                        nullptr
+                ),
+                ConfigItemType::PATH_STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, boost::filesystem::path>(
+                        new std::string("system"),
+                        ConfigItemType::PATH,
+                        "data_dir",
+                        &DaemonConfiguration::DataDirectory,
+                        nullptr
+                ),
+                ConfigItemType::PATH
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, boost::filesystem::path>(
+                        new std::string("system"),
+                        ConfigItemType::PATH,
+                        "temp_dir",
+                        &DaemonConfiguration::TempDirectory,
+                        nullptr
+                ),
+                ConfigItemType::PATH
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::STRING,
+                        "db_host",
+                        &DaemonConfiguration::DBHost,
+                        nullptr
+                ),
+                ConfigItemType::STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::STRING,
+                        "db_user",
+                        &DaemonConfiguration::DBUser,
+                        nullptr
+                ),
+                ConfigItemType::STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::STRING,
+                        "db_pass",
+                        &DaemonConfiguration::DBPass,
+                        nullptr
+                ),
+                ConfigItemType::STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::STRING,
+                        "db_name",
+                        &DaemonConfiguration::DBName,
+                        nullptr
+                ),
+                ConfigItemType::STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::STRING,
+                        "http_bind_addr",
+                        &DaemonConfiguration::HttpBindAddr,
+                        nullptr
+                ),
+                ConfigItemType::STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, u_int16_t>(
+                        new std::string("system"),
+                        ConfigItemType::UINT_16,
+                        "http_bind_port",
+                        &DaemonConfiguration::HttpBindPort,
+                        nullptr
+                ),
+                ConfigItemType::UINT_16
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::string>(
+                        new std::string("system"),
+                        ConfigItemType::STRING,
+                        "ruc_path",
+                        &DaemonConfiguration::RucPath,
+                        nullptr
+                ),
+                ConfigItemType::STRING
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, std::vector<ProgrammingLanguage>>(
+                        new std::string("system"),
+                        ConfigItemType::VECTOR,
+                        "languages",
+                        &DaemonConfiguration::Languages,
+                        new std::map<void *, ConfigItemType> {
+                                {
+                                        new ConfigFileItem<ProgrammingLanguage, int>(
+                                                nullptr,
+                                                ConfigItemType::STRING,
+                                                "id",
+                                                &ProgrammingLanguage::LanguageId,
+                                                nullptr
+                                        ),
+                                        ConfigItemType::STRING
+                                },
+                                {
+                                        new ConfigFileItem<ProgrammingLanguage, std::string>(
+                                                nullptr,
+                                                ConfigItemType::STRING,
+                                                "file_extension",
+                                                &ProgrammingLanguage::FileExtension,
+                                                nullptr
+                                        ),
+                                        ConfigItemType::STRING
+                                },
+                                {
+                                        new ConfigFileItem<ProgrammingLanguage, u_int64_t>(
+                                                nullptr,
+                                                ConfigItemType::UINT_64,
+                                                "extra_memory",
+                                                &ProgrammingLanguage::ExtraMemory,
+                                                nullptr
+                                        ),
+                                        ConfigItemType::UINT_64
+                                },
+                                {
+                                        new ConfigFileItem<ProgrammingLanguage, std::string>(
+                                                nullptr,
+                                                ConfigItemType::STRING,
+                                                "compilation_exec",
+                                                &ProgrammingLanguage::CompilationExec,
+                                                nullptr
+                                        ),
+                                        ConfigItemType::STRING
+                                }
+                        }
+                ),
+                ConfigItemType::VECTOR
+        }
 };
 
 #endif //CWOJ_DAEMON_CONF_ITEM_MAP_H
