@@ -8,6 +8,23 @@ using std::string;
 bool ReadConfigurationFile() {
     if (SystemConf.ReadConfiguration()) {
         OutputLog("System configuration file parsed successfully.");
+
+        OutputLog("DaemonConfiguration");
+        OutputLog("DBHost: " + SystemConf.DBHost);
+        OutputLog("DBUser: " + SystemConf.DBUser);
+        OutputLog("DBPass: " + SystemConf.DBPass);
+        OutputLog("DBName: " + SystemConf.DBName);
+        OutputLog("HttpBindAddr: " + SystemConf.HttpBindAddr);
+        OutputLog("DataDir: " + SystemConf.DataDir);
+        OutputLog("TempDir: " + SystemConf.TempDir);
+        OutputLog("RucPath: " + SystemConf.RucPath);
+        OutputLog("UserName: " + SystemConf.UserName);
+        OutputLog("DataDirectory: " + SystemConf.DataDirectory.string());
+        OutputLog("TempDirectory: " + SystemConf.TempDirectory.string());
+        OutputLog("HttpBindPort: " + SystemConf.HttpBindPort);
+        OutputLog("NormalLogFile: " + SystemConf.NormalLogFile.string());
+        OutputLog("ExceptionLogFile: " + SystemConf.ExceptionLogFile.string());
+
         return true;
     } else {
         OutputLog("Error: Configuration file fetal error, terminating process.");
