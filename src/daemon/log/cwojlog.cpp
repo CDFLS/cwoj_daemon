@@ -30,11 +30,12 @@ CwojLogger::CwojLogger(path normalLogFile,
                        bool isDebugMode = false):
         _normalLogFile(normalLogFile),
         _exceptionLogFile(exceptionLogFile),
-        _debugMode(isDebugMode){
-
+        _debugMode(isDebugMode) {
+    OpenStreams();
 }
 
 CwojLogger::~CwojLogger() {
+    FlushStreams();
     CloseStreams();
 }
 
@@ -50,6 +51,7 @@ void CwojLogger::Log(CwojLogLevel level, std::string content) {
             cout << format;
             break;
         case IMPORTANT_INFO:
+            cout << format;
             *_normalStream << format;
             break;
         case WARNING:
@@ -99,10 +101,22 @@ string CwojLogger::FormatLog(CwojLogLevel level, string content) {
             s = "UNKNOWN";
     }
     return "[" LOG_PREFFIX "][" +
-            string(ctime((const time_t *) system_clock::to_time_t(system_clock::now()))) +
+            string(GetTimeStamp()) +
             "][" + s + "]  " + content;
 }
 
 void CwojLogger::Terminate() {
     exit(1);
+}
+
+string CwojLogger::GetTimeStamp() {
+    time_t now_time = time(NULL);
+    char time_str[24];
+    std::strftime(time_str, 24, "%F %T", std::localtime(&now_time));
+    return string(time_str);
+}
+
+void CwojLogger::FlushStreams() {
+    _normalStream->flush();
+    _exceptionStream->flush();
 }

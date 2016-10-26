@@ -16,10 +16,11 @@ extern DaemonConfiguration SystemConf;
 
 enum ConfigItemType {
     STRING,
+    LANG_INT,
     SINT_32,
     UINT_16,
     UINT_64,
-    PATH,
+    PATH_OBJ,
     PATH_STRING,
     BOOL,
     VECTOR
@@ -34,11 +35,11 @@ public:
     T D::*DefaultConfObjItemPointer;
     std::map<void *, ConfigItemType> *SubLevelItem = nullptr;
 
-    inline T *CastType(DaemonConfiguration *confObj, T DaemonConfiguration::* targetObj) {
-        return FromOffset<DaemonConfiguration, T>(confObj, targetObj);
+    T *CastType(D *confObj, T D::* targetObj) {
+        return FromOffset<D, T>(confObj, targetObj);
     }
 
-    inline ConfigFileItem(std::string *prefix,
+    ConfigFileItem(std::string *prefix,
                           ConfigItemType type,
                           std::string key,
                           T D::*pointer,
@@ -52,6 +53,26 @@ public:
 
 typedef DaemonConfiguration DCF; // Default Configuration Object
 std::map<void *, ConfigItemType> ConfigItemMap{
+        {
+                new ConfigFileItem<DaemonConfiguration, boost::filesystem::path>(
+                        new std::string("log"),
+                        ConfigItemType::PATH_OBJ,
+                        "normal_log_file",
+                        &DaemonConfiguration::NormalLogFile,
+                        nullptr
+                ),
+                ConfigItemType::PATH_OBJ
+        },
+        {
+                new ConfigFileItem<DaemonConfiguration, boost::filesystem::path>(
+                        new std::string("log"),
+                        ConfigItemType::PATH_OBJ,
+                        "exception_log_file",
+                        &DaemonConfiguration::ExceptionLogFile,
+                        nullptr
+                ),
+                ConfigItemType::PATH_OBJ
+        },
         {
                 new ConfigFileItem<DaemonConfiguration, std::string>(
                         new std::string("system"),
@@ -75,22 +96,22 @@ std::map<void *, ConfigItemType> ConfigItemMap{
         {
                 new ConfigFileItem<DaemonConfiguration, boost::filesystem::path>(
                         new std::string("system"),
-                        ConfigItemType::PATH,
+                        ConfigItemType::PATH_OBJ,
                         "data_dir",
                         &DaemonConfiguration::DataDirectory,
                         nullptr
                 ),
-                ConfigItemType::PATH
+                ConfigItemType::PATH_OBJ
         },
         {
                 new ConfigFileItem<DaemonConfiguration, boost::filesystem::path>(
                         new std::string("system"),
-                        ConfigItemType::PATH,
+                        ConfigItemType::PATH_OBJ,
                         "temp_dir",
                         &DaemonConfiguration::TempDirectory,
                         nullptr
                 ),
-                ConfigItemType::PATH
+                ConfigItemType::PATH_OBJ
         },
         {
                 new ConfigFileItem<DaemonConfiguration, std::string>(
@@ -172,12 +193,12 @@ std::map<void *, ConfigItemType> ConfigItemMap{
                                 {
                                         new ConfigFileItem<ProgrammingLanguage, int>(
                                                 nullptr,
-                                                ConfigItemType::STRING,
+                                                ConfigItemType::LANG_INT,
                                                 "id",
                                                 &ProgrammingLanguage::LanguageId,
                                                 nullptr
                                         ),
-                                        ConfigItemType::STRING
+                                        ConfigItemType::LANG_INT
                                 },
                                 {
                                         new ConfigFileItem<ProgrammingLanguage, std::string>(

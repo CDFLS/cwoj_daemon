@@ -38,7 +38,11 @@ private:
 
     void OpenStreams();
 
+    void FlushStreams();
+
     void CloseStreams();
+
+    std::string GetTimeStamp();
 
     std::string FormatLog(CwojLogLevel, std::string);
 
