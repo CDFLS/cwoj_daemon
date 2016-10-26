@@ -59,8 +59,10 @@ static inline void AssignValueFromYaml(YAML::Node rootNode, DaemonConfiguration 
     ConfigFileItem<B, O> *item = (ConfigFileItem<B, O> *) pair.first;
     if (item->PrefixHier == nullptr) {
         *item->CastType(obj, item->DefaultConfObjItemPointer) = rootNode[item->ConfigKey].template as<O>();
+        OutputLog(item->ConfigKey + " " + rootNode[item->ConfigKey].template as<O>());
     } else {
         *item->CastType(obj, item->DefaultConfObjItemPointer) = rootNode[*item->PrefixHier][item->ConfigKey].template as<O>();
+        OutputLog(*item->PrefixHier + " " + item->ConfigKey + " " + rootNode[item->ConfigKey].template as<O>());
     }
 }
 
