@@ -138,6 +138,10 @@ bool DaemonConfiguration::ParseYaml(std::string path) {
         }
     }
 
+    for (ProgrammingLanguage &pl : SystemConf.Languages) {
+        pl.LanguageId--;
+    }
+
     return true;
 }
 
