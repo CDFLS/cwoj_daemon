@@ -80,7 +80,7 @@ void InitalizeSeccomp() {
         Ensure_Seccomp(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(uname), 0));
         Ensure_Seccomp(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(arch_prctl), 0));
         Ensure_Seccomp(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(brk), 0));
-        Ensure_Seccomp(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(time), 0));
+        Ensure_Seccomp(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(times), 0));
 
         Ensure_Seccomp(seccomp_rule_add(ctx, SCMP_ACT_TRACE(Seccomp_ExecvpSyscall), SCMP_SYS(execve), 0));
 
