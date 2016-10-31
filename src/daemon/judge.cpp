@@ -105,11 +105,14 @@ bool solution::Compile() throw(const char *) {
     fwrite(SourceCode.c_str(), 1, size, code_file);
     fclose(code_file);*/
 
+    remove(targetFile);
+    path errFile = SystemConf.TempDirectory / "err.out";
     string command = str(format(SystemConf.FindLanguage(LanguageType)->CompilationExec) % sourceCodeFile % targetFile);
-    command += " >err.out 2>&1 && echo @~good~@ >err.out";
+    command += (format(" >%1% 2>&1 && echo @~good~@ >%1%") % errFile).str();
+    std::cerr << "Executing " << command << endl;
     system(command.c_str());
 
-    FILE *output = fopen("err.out", "r");
+    FILE *output = fopen(errFile.string().c_str(), "r");
     if (!output) {
         throw "Can't open compiler output";
     }
@@ -145,6 +148,7 @@ bool solution::Compile() throw(const char *) {
             return false;
         }
     }
+    remove(errFile);
     return true;
 }
 
