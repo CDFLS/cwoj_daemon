@@ -206,7 +206,7 @@ RunResult TraceChild(int childpid) {
                     if ((x == Seccomp_DisabledSyscall) ||
                         // Calling execvp in sandboxed app is also invalid
                         (codeRun && x == Seccomp_ExecvpSyscall)) {
-                        int scno = ptrace(PTRACE_PEEKUSER, childpid, ORIG_RAX * 8, NULL);
+                        int scno = ptrace(PTRACE_PEEKUSER, childpid, ORIG_RAX * 8, NULL) + 1;
                         if (scno == SCMP_SYS(times) || scno == SCMP_SYS(access))
                         {
                             // TODO: BUG HERE
@@ -220,10 +220,10 @@ RunResult TraceChild(int childpid) {
                         else
                         {
                             Log(format("Info: app is calling forbidden syscall `%1%()`, killing") %
-                                    SyscallToString(scno + 1), Debug);
+                                    SyscallToString(scno), Debug);
                             childStatus = Kill;
                             runResult.Status = BAD_SYSTEM_CALL;
-                            runResult.Code = scno + 1;
+                            runResult.Code = scno;
                         }
                     }
                 } else if (status >> 8 == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
