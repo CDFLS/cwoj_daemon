@@ -9,6 +9,10 @@ system:
   http_bind_port: 8881
   ruc_path:
 
+log:
+  normal_log_file:
+  exception_log_file:
+
 languages:
   - id: 1
     file_extension: cpp
