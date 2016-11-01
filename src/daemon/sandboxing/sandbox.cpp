@@ -207,11 +207,24 @@ RunResult TraceChild(int childpid) {
                         // Calling execvp in sandboxed app is also invalid
                         (codeRun && x == Seccomp_ExecvpSyscall)) {
                         int scno = ptrace(PTRACE_PEEKUSER, childpid, ORIG_RAX * 8, NULL);
-                        Log(format("Info: app is calling forbidden syscall `%1%()`, killing") %
-                            SyscallToString(scno + 1), Debug);
-                        childStatus = Kill;
-                        runResult.Status = BAD_SYSTEM_CALL;
-                        runResult.Code = scno + 1;
+                        if (scno == SCMP_SYS(times) || scno == SCMP_SYS(access))
+                        {
+                            // TODO: BUG HERE
+                            // times(2) should be allowed and access(2) should return an errno.
+                            // They should not trigger a seccomp event.
+                            // We should not arrive here; but we do.
+                            // See https://cwoj.org submit 3902 and 4093.
+                            // What the fuck???!!!
+                            Log(format("WTF?????!!!!!"), Debug);
+                        }
+                        else
+                        {
+                            Log(format("Info: app is calling forbidden syscall `%1%()`, killing") %
+                                    SyscallToString(scno + 1), Debug);
+                            childStatus = Kill;
+                            runResult.Status = BAD_SYSTEM_CALL;
+                            runResult.Code = scno + 1;
+                        }
                     }
                 } else if (status >> 8 == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
                     // App starts running.
