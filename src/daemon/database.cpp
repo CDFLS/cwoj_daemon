@@ -305,7 +305,7 @@ void get_solution_list(std::vector<int> &rejudge_list, int problem_id) throw(con
     Check_mysql_connection();
 
     puts("get_solution_list");
-    sprintf(statements, "select solution_id from solution where problem_id=%d", problem_id);
+    sprintf(statements, "select solution_id from solution where problem_id=%d and malicious=0", problem_id);
     if (mysql_query(hMySQL, statements))
         throw "query solution_id";
     MYSQL_RES *result = mysql_store_result(hMySQL);
