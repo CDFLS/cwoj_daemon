@@ -255,7 +255,7 @@ void update_problem_rejudged_status(int problem_id) throw(const char *) {
     Check_mysql_connection();
 
     puts("update_problem_rejudged_status");
-    sprintf(statements, "update problem set rejudged=1 where problem_id=%d", problem_id);
+    sprintf(statements, "update problem set rejudge_time=NOW() where problem_id=%d", problem_id);
     if (mysql_query(hMySQL, statements))
         throw "update problem rejudged status";
 }
