@@ -250,12 +250,12 @@ void update_exist_solution_info(int solution_id, solution *data) throw(const cha
         throw "update solution";
 }
 
-void update_problem_rejudged_status(int problem_id) throw(const char *) {
+void update_contest_need_update_status(int problem_id) throw(const char *) {
     std::unique_lock<std::mutex> Lock(database_mutex);
     Check_mysql_connection();
 
-    puts("update_problem_rejudged_status");
-    sprintf(statements, "update problem set rejudge_time=NOW() where problem_id=%d", problem_id);
+    puts("update_contest_need_update_status");
+    sprintf(statements, "update contest set need_update=1 where contest_id in (select contest_id from contest_problem where problem_id=%d)", problem_id);
     if (mysql_query(hMySQL, statements))
         throw "update problem rejudged status";
 }
@@ -290,16 +290,13 @@ void refresh_users_problem(int problem_id) throw(const char *) {
         throw "update problem accepted & solved";
 
     //maintain `valid` field in `solution`
-    sprintf(statements, "update solution set valid=0 where problem_id=%d", problem_id);
-    if (mysql_query(hMySQL, statements))
-        throw "set valid=0";
-    sprintf(statements,
-            "update solution,(select solution_id from(select solution_id,user_id from solution where problem_id=%d and result=0 order by solution_id) as t group by user_id)as s set valid=1 where solution.solution_id=s.solution_id",
-            problem_id);
-    if (mysql_query(hMySQL, statements))
-        throw "maintain valid field";
+	sprintf(statements,"update solution set valid=0 where problem_id=%d", problem_id);
+	if(mysql_query(hMySQL, statements))
+		throw "set valid=0";
+	sprintf(statements,"update solution,(select solution_id from(select solution_id,user_id from solution where problem_id=%d and result=0 order by solution_id) as t)as s SET valid=1 where solution.solution_id=s.solution_id", problem_id);
+	if(mysql_query(hMySQL, statements))
+		throw "maintain valid field";
 }
-
 void get_solution_list(std::vector<int> &rejudge_list, int problem_id) throw(const char *) {
     std::unique_lock<std::mutex> Lock(database_mutex);
     Check_mysql_connection();
