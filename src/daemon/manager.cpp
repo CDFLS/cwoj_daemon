@@ -248,7 +248,7 @@ void thread_rejudge() {
             delete sol;
         }
         try {
-            update_problem_rejudged_status(rejudge_init.ProblemFK);
+            update_contest_need_update_status(rejudge_init.ProblemFK);
             refresh_users_problem(rejudge_init.ProblemFK);
         } catch (const char *e) {
             if (e != "maintain valid field")
